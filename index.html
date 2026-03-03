@@ -1,0 +1,2820 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Murdocca · Sistema de Gestión</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- Google Identity Services -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root {
+    --cream: #F5F0E8;
+    --warm-white: #FDFAF4;
+    --oat: #E8DFC8;
+    --honey: #C8922A;
+    --honey-dark: #A3731A;
+    --honey-light: #F0C96A;
+    --chocolate: #3D2B1F;
+    --bark: #6B4C35;
+    --sage: #7A8C6E;
+    --sage-light: #B8C9AA;
+    --terracotta: #C4654A;
+    --sand: #D4B896;
+    --shadow: rgba(61,43,31,0.12);
+    --shadow-deep: rgba(61,43,31,0.22);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--chocolate);
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse at 80% 0%, rgba(200,146,42,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse at 0% 100%, rgba(122,140,110,0.08) 0%, transparent 50%);
+  }
+
+  /* ── LOGIN SCREEN ── */
+  #login-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--chocolate);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    background-image:
+      radial-gradient(ellipse at 70% 20%, rgba(200,146,42,0.18) 0%, transparent 55%),
+      radial-gradient(ellipse at 20% 80%, rgba(122,140,110,0.12) 0%, transparent 50%);
+  }
+
+  #login-screen.hidden { display: none; }
+
+  .login-box {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 44px 40px;
+    text-align: center;
+    width: 360px;
+    max-width: 92vw;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+    animation: modalIn 0.4s ease;
+  }
+
+  .login-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    color: var(--honey-light);
+    margin-bottom: 4px;
+  }
+
+  .login-sub {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--sand);
+    opacity: 0.5;
+    margin-bottom: 36px;
+  }
+
+  .login-tagline {
+    font-size: 13px;
+    color: rgba(255,255,255,0.45);
+    margin-bottom: 28px;
+    line-height: 1.6;
+  }
+
+  .google-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    padding: 13px 20px;
+    background: white;
+    border: none;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: #3c4043;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  }
+
+  .google-btn:hover {
+    background: #f8f8f8;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    transform: translateY(-1px);
+  }
+
+  .google-btn svg { flex-shrink: 0; }
+
+  .login-acceso-denegado {
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: rgba(196,101,74,0.2);
+    border: 1px solid rgba(196,101,74,0.4);
+    border-radius: 8px;
+    color: #f0a090;
+    font-size: 12.5px;
+    display: none;
+  }
+
+  .login-acceso-denegado.show { display: block; }
+
+  .login-footer {
+    margin-top: 24px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.2);
+  }
+
+  /* ── USER CHIP en topbar ── */
+  .user-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 12px 5px 5px;
+    background: var(--oat);
+    border-radius: 30px;
+    cursor: pointer;
+    transition: background 0.2s;
+    position: relative;
+  }
+
+  .user-chip:hover { background: var(--sand); }
+
+  .user-avatar {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--honey);
+  }
+
+  .user-avatar-initials {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--honey);
+    color: var(--chocolate);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .user-name { font-size: 12.5px; font-weight: 500; color: var(--chocolate); }
+  .user-role-badge {
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .role-admin { background: rgba(200,146,42,0.2); color: var(--honey-dark); }
+  .role-empleado { background: rgba(122,140,110,0.2); color: var(--sage); }
+
+  /* Dropdown del usuario */
+  .user-dropdown {
+    display: none;
+    position: absolute;
+    top: 44px; right: 0;
+    background: var(--warm-white);
+    border: 1px solid var(--oat);
+    border-radius: 12px;
+    padding: 8px;
+    min-width: 200px;
+    box-shadow: 0 8px 30px var(--shadow-deep);
+    z-index: 200;
+  }
+
+  .user-dropdown.open { display: block; animation: modalIn 0.15s ease; }
+
+  .user-dropdown-header {
+    padding: 10px 12px 12px;
+    border-bottom: 1px solid var(--oat);
+    margin-bottom: 6px;
+  }
+
+  .user-dropdown-email { font-size: 11px; opacity: 0.5; margin-top: 2px; }
+
+  .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 7px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s;
+    color: var(--chocolate);
+  }
+
+  .dropdown-item:hover { background: var(--oat); }
+  .dropdown-item.danger { color: var(--terracotta); }
+
+  /* ── ACCESO RESTRINGIDO overlay ── */
+  .restricted-overlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: rgba(245,240,232,0.85);
+    backdrop-filter: blur(2px);
+    z-index: 10;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    border-radius: 14px;
+    text-align: center;
+    gap: 8px;
+  }
+
+  .restricted-overlay.show { display: flex; }
+  .restricted-overlay .icon { font-size: 32px; }
+  .restricted-overlay p { font-size: 13px; color: var(--bark); opacity: 0.7; }
+
+  /* ── PANEL ADMIN USUARIOS ── */
+  .user-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--oat);
+  }
+  .user-row:last-child { border-bottom: none; }
+  .user-row-info { flex: 1; }
+  .user-row-email { font-size: 11px; opacity: 0.5; }
+
+  /* GRAIN TEXTURE */
+  body::before {
+    content:'';
+    position:fixed;
+    inset:0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events:none;
+    z-index:0;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: 240px;
+    background: var(--chocolate);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    box-shadow: 4px 0 24px var(--shadow-deep);
+  }
+
+  .sidebar-brand {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .brand-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    color: var(--honey-light);
+    letter-spacing: 0.5px;
+    line-height: 1.2;
+  }
+
+  .brand-sub {
+    font-size: 10px;
+    color: var(--sand);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 3px;
+    opacity: 0.7;
+  }
+
+  .sidebar-nav {
+    flex: 1;
+    padding: 16px 12px;
+    overflow-y: auto;
+  }
+
+  .nav-section-label {
+    font-size: 9px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--sand);
+    opacity: 0.45;
+    padding: 12px 12px 6px;
+    font-weight: 600;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: rgba(255,255,255,0.6);
+    font-size: 13.5px;
+    font-weight: 400;
+    margin-bottom: 2px;
+  }
+
+  .nav-item:hover { background: rgba(255,255,255,0.06); color: white; }
+  .nav-item.active {
+    background: var(--honey);
+    color: var(--chocolate);
+    font-weight: 600;
+  }
+
+  .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+
+  .sidebar-footer {
+    padding: 16px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .config-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    color: rgba(255,255,255,0.6);
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+  }
+  .config-btn:hover { background: rgba(255,255,255,0.1); color: white; }
+
+  /* MAIN */
+  .main {
+    margin-left: 240px;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* TOPBAR */
+  .topbar {
+    background: var(--warm-white);
+    border-bottom: 1px solid var(--oat);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .page-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    color: var(--chocolate);
+  }
+
+  .topbar-actions { display: flex; gap: 10px; align-items: center; }
+
+  .btn {
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+  }
+
+  .btn-primary {
+    background: var(--honey);
+    color: var(--chocolate);
+  }
+  .btn-primary:hover { background: var(--honey-dark); color: white; }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--oat);
+    color: var(--bark);
+  }
+  .btn-ghost:hover { background: var(--oat); }
+
+  .btn-danger {
+    background: var(--terracotta);
+    color: white;
+  }
+  .btn-danger:hover { background: #a8543c; }
+
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+  /* CONTENT */
+  .content { padding: 28px 32px; }
+
+  /* SECTIONS */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: var(--warm-white);
+    border: 1px solid var(--oat);
+    border-radius: 14px;
+    padding: 22px;
+    box-shadow: 0 2px 12px var(--shadow);
+  }
+
+  .card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    margin-bottom: 16px;
+    color: var(--chocolate);
+  }
+
+  /* STATS ROW */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: var(--warm-white);
+    border: 1px solid var(--oat);
+    border-radius: 12px;
+    padding: 18px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card::before {
+    content:'';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--honey);
+  }
+
+  .stat-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--bark);
+    opacity: 0.65;
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 24px;
+    font-weight: 500;
+    color: var(--chocolate);
+  }
+
+  .stat-value.money::before { content: '$'; font-size: 14px; opacity: 0.6; margin-right: 2px; }
+
+  .stat-sub {
+    font-size: 11px;
+    color: var(--sage);
+    margin-top: 4px;
+  }
+
+  /* GRID LAYOUTS */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+  /* TABLES */
+  .table-wrap { overflow-x: auto; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+
+  th {
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--bark);
+    opacity: 0.6;
+    border-bottom: 1px solid var(--oat);
+    font-weight: 600;
+  }
+
+  td {
+    padding: 11px 14px;
+    border-bottom: 1px solid rgba(232,223,200,0.5);
+    color: var(--chocolate);
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(232,223,200,0.25); }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .badge-green { background: rgba(122,140,110,0.15); color: var(--sage); }
+  .badge-amber { background: rgba(200,146,42,0.15); color: var(--honey-dark); }
+  .badge-red { background: rgba(196,101,74,0.15); color: var(--terracotta); }
+  .badge-blue { background: rgba(100,130,180,0.15); color: #4a6fa5; }
+
+  /* FORMS */
+  .form-group { margin-bottom: 14px; }
+
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--bark);
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+
+  input, select, textarea {
+    width: 100%;
+    padding: 9px 13px;
+    border: 1px solid var(--oat);
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13.5px;
+    background: var(--cream);
+    color: var(--chocolate);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--honey);
+    box-shadow: 0 0 0 3px rgba(200,146,42,0.12);
+  }
+
+  textarea { resize: vertical; min-height: 80px; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(61,43,31,0.45);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--warm-white);
+    border-radius: 16px;
+    padding: 28px;
+    width: 520px;
+    max-width: 92vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px var(--shadow-deep);
+    animation: modalIn 0.25s ease;
+  }
+
+  @keyframes modalIn {
+    from { opacity:0; transform: translateY(16px) scale(0.97); }
+    to { opacity:1; transform: translateY(0) scale(1); }
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .modal-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: var(--bark);
+    opacity: 0.5;
+    padding: 2px 6px;
+  }
+  .modal-close:hover { opacity: 1; }
+
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--oat);
+  }
+
+  /* CONFIG PANEL */
+  .config-panel {
+    background: var(--chocolate);
+    color: white;
+    padding: 24px;
+    border-radius: 14px;
+    margin-bottom: 24px;
+  }
+
+  .config-panel h3 {
+    font-family: 'Playfair Display', serif;
+    color: var(--honey-light);
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+
+  .config-panel p {
+    font-size: 12.5px;
+    opacity: 0.7;
+    margin-bottom: 16px;
+    line-height: 1.6;
+  }
+
+  .config-panel input {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.15);
+    color: white;
+  }
+
+  .config-panel input::placeholder { opacity: 0.4; }
+  .config-panel label { color: var(--sand); }
+
+  /* ALERT */
+  .alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .alert-warning { background: rgba(200,146,42,0.12); border: 1px solid rgba(200,146,42,0.3); color: var(--honey-dark); }
+  .alert-info { background: rgba(122,140,110,0.12); border: 1px solid rgba(122,140,110,0.3); color: var(--sage); }
+  .alert-error { background: rgba(196,101,74,0.12); border: 1px solid rgba(196,101,74,0.3); color: var(--terracotta); }
+
+  /* FORMULA / RECIPE */
+  .formula-ingredient {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--oat);
+  }
+
+  .formula-ingredient:last-child { border-bottom: none; }
+
+  .formula-ingredient input {
+    width: auto;
+  }
+
+  .fi-name { flex: 1; font-size: 13.5px; }
+  .fi-qty { width: 80px; }
+  .fi-unit { width: 70px; font-size: 12px; color: var(--bark); opacity: 0.7; }
+  .fi-cost { width: 90px; font-family: 'DM Mono', monospace; font-size: 12px; color: var(--sage); text-align: right; }
+
+  /* CAJA */
+  .caja-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(232,223,200,0.5);
+  }
+
+  .caja-type {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+
+  .caja-ingreso { background: rgba(122,140,110,0.2); color: var(--sage); }
+  .caja-egreso { background: rgba(196,101,74,0.2); color: var(--terracotta); }
+
+  .caja-desc { flex: 1; font-size: 13px; }
+  .caja-amount { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; }
+  .caja-amount.pos { color: var(--sage); }
+  .caja-amount.neg { color: var(--terracotta); }
+  .caja-date { font-size: 11px; color: var(--bark); opacity: 0.5; white-space: nowrap; }
+
+  /* SALDO BAR */
+  .saldo-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--chocolate);
+    color: white;
+    border-radius: 12px;
+    padding: 18px 24px;
+    margin-bottom: 20px;
+  }
+
+  .saldo-bar .label { font-size: 11px; opacity: 0.5; text-transform: uppercase; letter-spacing: 1.5px; }
+  .saldo-bar .amount { font-family: 'DM Mono', monospace; font-size: 28px; color: var(--honey-light); }
+
+  /* LOADING */
+  .loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    color: var(--bark);
+    opacity: 0.5;
+    font-size: 13px;
+    gap: 8px;
+  }
+
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid var(--oat);
+    border-top-color: var(--honey);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* SYNC STATUS */
+  .sync-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    color: var(--bark);
+    opacity: 0.6;
+  }
+
+  .sync-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--sage);
+  }
+
+  .sync-dot.syncing { background: var(--honey); animation: pulse 1s infinite; }
+  .sync-dot.error { background: var(--terracotta); }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 40px;
+    color: var(--bark);
+    opacity: 0.5;
+  }
+
+  .empty-state .icon { font-size: 36px; margin-bottom: 10px; }
+  .empty-state p { font-size: 13px; }
+
+  /* ACTION ROW */
+  .action-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .search-input {
+    width: 220px;
+    padding: 7px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--oat);
+    font-size: 12.5px;
+    background: var(--cream);
+  }
+
+  /* FACTURA */
+  .factura-preview {
+    border: 2px dashed var(--oat);
+    border-radius: 12px;
+    padding: 24px;
+    background: white;
+    font-size: 12.5px;
+  }
+
+  .factura-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 2px solid var(--oat);
+  }
+
+  .factura-empresa { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--chocolate); }
+  .factura-num { font-family: 'DM Mono', monospace; font-size: 18px; color: var(--honey-dark); }
+
+  /* COST CALCULATOR */
+  .cost-result {
+    background: linear-gradient(135deg, var(--honey) 0%, var(--honey-dark) 100%);
+    border-radius: 12px;
+    padding: 20px;
+    color: var(--chocolate);
+    text-align: center;
+  }
+
+  .cost-result .label { font-size: 11px; opacity: 0.7; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; }
+  .cost-result .value { font-family: 'DM Mono', monospace; font-size: 32px; font-weight: 500; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; background: var(--oat); border-radius: 10px; padding: 4px; }
+  .tab { padding: 7px 16px; border-radius: 7px; font-size: 13px; cursor: pointer; transition: all 0.2s; color: var(--bark); font-weight: 500; }
+  .tab.active { background: white; color: var(--chocolate); box-shadow: 0 1px 4px var(--shadow); }
+
+  /* DELETE btn in table */
+  .icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: background 0.15s;
+  }
+  .icon-btn:hover { background: var(--oat); }
+
+  /* PEDIDO STATUS */
+  .pedido-card {
+    background: var(--warm-white);
+    border: 1px solid var(--oat);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .pedido-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--bark);
+    opacity: 0.6;
+    width: 40px;
+  }
+
+  .pedido-info { flex: 1; }
+  .pedido-cliente { font-weight: 600; font-size: 14px; }
+  .pedido-detalle { font-size: 12px; color: var(--bark); opacity: 0.65; margin-top: 2px; }
+  .pedido-amount { font-family: 'DM Mono', monospace; font-size: 15px; font-weight: 500; color: var(--honey-dark); margin-right: 8px; }
+
+  @media (max-width: 768px) {
+    .sidebar { width: 200px; }
+    .main { margin-left: 200px; }
+    .content { padding: 16px; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .form-row, .form-row-3 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═════════════════════════ LOGIN SCREEN ═════════════════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Murdocca</div>
+    <div class="login-sub">Sistema de Gestión</div>
+    <div class="login-tagline">Ingresá con tu cuenta de Google autorizada para acceder al sistema.</div>
+    <button class="google-btn" onclick="loginWithGoogle()">
+      <svg width="20" height="20" viewBox="0 0 48 48">
+        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+      </svg>
+      Ingresar con Google
+    </button>
+    <div class="login-acceso-denegado" id="login-error">
+      🚫 Tu cuenta de Google no tiene acceso autorizado. Contactá al administrador.
+    </div>
+    <div class="login-footer">Solo usuarios autorizados pueden acceder</div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="app-sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-name">Murdocca</div>
+    <div class="brand-sub">Sistema de Gestión</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Principal</div>
+    <div class="nav-item active" onclick="showSection('dashboard')">
+      <span class="nav-icon">📊</span> Dashboard
+    </div>
+    <div class="nav-section-label">Producción</div>
+    <div class="nav-item" onclick="showSection('formula')">
+      <span class="nav-icon">🧪</span> Fórmula
+    </div>
+    <div class="nav-item" onclick="showSection('stock')">
+      <span class="nav-icon">📦</span> Stock
+    </div>
+    <div class="nav-item" onclick="showSection('costos')">
+      <span class="nav-icon">💡</span> Costos & Precios
+    </div>
+    <div class="nav-section-label">Comercial</div>
+    <div class="nav-item" onclick="showSection('clientes')">
+      <span class="nav-icon">👥</span> Clientes
+    </div>
+    <div class="nav-item" onclick="showSection('pedidos')">
+      <span class="nav-icon">🛒</span> Pedidos
+    </div>
+    <div class="nav-item" onclick="showSection('facturacion')">
+      <span class="nav-icon">🧾</span> Facturación
+    </div>
+    <div class="nav-section-label">Finanzas</div>
+    <div class="nav-item" onclick="showSection('caja')">
+      <span class="nav-icon">💰</span> Caja
+    </div>
+    <div class="nav-section-label">Sistema</div>
+    <div class="nav-item" onclick="showSection('configuracion')">
+      <span class="nav-icon">⚙️</span> Configuración
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sync-status" id="syncStatus">
+      <div class="sync-dot" id="syncDot"></div>
+      <span id="syncText">Sin conectar</span>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="page-title" id="pageTitle">Dashboard</div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost" onclick="syncData()">🔄 Sincronizar</button>
+      <button class="btn btn-primary" id="topActionBtn" onclick="handleTopAction()">+ Nuevo</button>
+      <!-- USER CHIP -->
+      <div class="user-chip" onclick="toggleUserDropdown()" id="user-chip" style="display:none;">
+        <div class="user-avatar-initials" id="user-initials">?</div>
+        <span class="user-name" id="user-display-name">Usuario</span>
+        <span class="user-role-badge role-admin" id="user-role-badge">Admin</span>
+        <div class="user-dropdown" id="user-dropdown">
+          <div class="user-dropdown-header">
+            <div style="font-weight:600; font-size:13px;" id="dd-name">—</div>
+            <div class="user-dropdown-email" id="dd-email">—</div>
+          </div>
+          <div class="dropdown-item" onclick="showSection('configuracion')">⚙️ Configuración</div>
+          <div class="dropdown-item danger" onclick="logout()">🚪 Cerrar sesión</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ═══════════════════════════════ DASHBOARD ═══════════════════════════════ -->
+    <div class="section active" id="sec-dashboard">
+      <div id="dash-alert" class="alert alert-warning" style="display:none">
+        ⚠️ <span id="dash-alert-text"></span>
+      </div>
+
+      <div class="stats-grid" id="dashStats">
+        <div class="stat-card">
+          <div class="stat-label">Stock Alertas</div>
+          <div class="stat-value" id="ds-alertas">—</div>
+          <div class="stat-sub">ingredientes bajo mínimo</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Pedidos Pendientes</div>
+          <div class="stat-value" id="ds-pedidos">—</div>
+          <div class="stat-sub">por entregar</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Saldo Caja</div>
+          <div class="stat-value money" id="ds-saldo">—</div>
+          <div class="stat-sub">balance actual</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Clientes</div>
+          <div class="stat-value" id="ds-clientes">—</div>
+          <div class="stat-sub">registrados</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">⚠️ Stock Crítico</div>
+          <div id="dash-stock-critico">
+            <div class="loading"><div class="spinner"></div> Cargando...</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">🛒 Últimos Pedidos</div>
+          <div id="dash-pedidos-recientes">
+            <div class="loading"><div class="spinner"></div> Cargando...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════ FÓRMULA ═══════════════════════════════ -->
+    <div class="section" id="sec-formula">
+      <div class="tabs" id="formula-tabs">
+        <!-- Tabs generados por JS -->
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">🧪 Ingredientes de la Receta</div>
+          <div id="formula-lista"></div>
+          <div style="margin-top:12px; display:flex; gap:8px;">
+            <button class="btn btn-ghost btn-sm" onclick="openModalAddIngFormula()">+ Agregar ingrediente</button>
+            <button class="btn btn-primary btn-sm" onclick="saveFormula()">💾 Guardar Receta</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">📊 Costo de Producción</div>
+          <div class="form-group">
+            <label>Unidades por lote</label>
+            <input type="number" id="f-unidades" value="50" min="1" onchange="calcFormulaCost()">
+          </div>
+          <div class="cost-result" style="margin-bottom:14px">
+            <div class="label">Costo por unidad</div>
+            <div class="value">$<span id="f-costo-unit">0.00</span></div>
+          </div>
+          <div style="background:var(--oat); border-radius:10px; padding:14px; font-size:12.5px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+              <span>Costo total lote</span>
+              <span class="font-mono" id="f-costo-total">$0.00</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+              <span>Con margen (<span id="f-margen-label">40</span>%)</span>
+              <span class="font-mono" id="f-precio-sugerido">$0.00</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-weight:600;">
+              <span>Precio sugerido venta</span>
+              <span class="font-mono" style="color:var(--honey-dark);" id="f-precio-final">$0.00</span>
+            </div>
+          </div>
+          <div class="form-group" style="margin-top:12px;">
+            <label>Margen de ganancia (%)</label>
+            <input type="range" id="f-margen" min="10" max="200" value="40" oninput="calcFormulaCost()" style="padding:0; border:none; background:none; box-shadow:none;">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════ STOCK ═══════════════════════════════ -->
+    <div class="section" id="sec-stock">
+      <div class="action-row">
+        <input class="search-input" type="text" placeholder="🔍 Buscar ingrediente..." oninput="filterStock(this.value)">
+        <button class="btn btn-primary" onclick="openModalStock()">+ Nuevo Ingrediente</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Ingrediente</th>
+                <th>Stock Actual</th>
+                <th>Mínimo</th>
+                <th>Unidad</th>
+                <th>Costo/U</th>
+                <th>Estado</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="stock-tbody">
+              <tr><td colspan="7"><div class="loading"><div class="spinner"></div>Cargando...</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════ COSTOS ═══════════════════════════════ -->
+    <div class="section" id="sec-costos">
+      <div class="grid-2" style="margin-bottom:16px;">
+        <div class="card">
+          <div class="card-title">💡 Calculadora de Precio</div>
+          <div class="form-group">
+            <label>Producto / Variedad</label>
+            <select id="calc-producto">
+              <option>Barrita Clásica</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Costo base (por unidad)</label>
+            <input type="number" id="calc-costo" placeholder="0.00" step="0.01" oninput="calcPrecio()">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Margen (%)</label>
+              <input type="number" id="calc-margen" value="40" oninput="calcPrecio()">
+            </div>
+            <div class="form-group">
+              <label>IVA (%)</label>
+              <input type="number" id="calc-iva" value="0" oninput="calcPrecio()">
+            </div>
+          </div>
+          <div class="cost-result" style="margin-top:8px;">
+            <div class="label">Precio de Venta Sugerido</div>
+            <div class="value">$<span id="calc-result">0.00</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📈 Precios Registrados</div>
+          <table>
+            <thead><tr><th>Producto</th><th>Costo</th><th>Precio Venta</th><th>Margen</th></tr></thead>
+            <tbody id="precios-tbody">
+              <tr><td colspan="4" style="text-align:center; opacity:0.4; padding:20px;">Sin registros</td></tr>
+            </tbody>
+          </table>
+          <div style="margin-top:12px;">
+            <button class="btn btn-primary btn-sm" onclick="savePrecio()">+ Guardar Precio</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📦 Proyección de Producción</div>
+        <div class="form-row-3">
+          <div class="form-group">
+            <label>Unidades a producir</label>
+            <input type="number" id="proy-unidades" value="100" oninput="calcProyeccion()">
+          </div>
+          <div class="form-group">
+            <label>Costo unitario</label>
+            <input type="number" id="proy-costo" placeholder="0.00" oninput="calcProyeccion()">
+          </div>
+          <div class="form-group">
+            <label>Precio de venta</label>
+            <input type="number" id="proy-precio" placeholder="0.00" oninput="calcProyeccion()">
+          </div>
+        </div>
+        <div class="stats-grid" style="margin-top:8px; margin-bottom:0;">
+          <div class="stat-card"><div class="stat-label">Costo Total</div><div class="stat-value money" id="proy-costo-total">0</div></div>
+          <div class="stat-card"><div class="stat-label">Ingresos Totales</div><div class="stat-value money" id="proy-ingreso">0</div></div>
+          <div class="stat-card"><div class="stat-label">Ganancia</div><div class="stat-value money" id="proy-ganancia">0</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════ CLIENTES ═══════════════════════════════ -->
+    <div class="section" id="sec-clientes">
+      <div class="action-row">
+        <input class="search-input" type="text" placeholder="🔍 Buscar cliente..." oninput="filterClientes(this.value)">
+        <button class="btn btn-primary" onclick="openModalCliente()">+ Nuevo Cliente</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Teléfono</th>
+                <th>Email</th>
+                <th>Dirección</th>
+                <th>Notas</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="clientes-tbody">
+              <tr><td colspan="6"><div class="loading"><div class="spinner"></div>Cargando...</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════ PEDIDOS ═══════════════════════════════ -->
+    <div class="section" id="sec-pedidos">
+      <div class="action-row">
+        <div class="tabs" style="margin-bottom:0; background:var(--oat);">
+          <div class="tab active" onclick="filterPedidos('todos', this)">Todos</div>
+          <div class="tab" onclick="filterPedidos('pendiente', this)">Pendientes</div>
+          <div class="tab" onclick="filterPedidos('entregado', this)">Entregados</div>
+          <div class="tab" onclick="filterPedidos('cobrado', this)">Cobrados</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModalPedido()">+ Nuevo Pedido</button>
+      </div>
+      <div id="pedidos-list" style="margin-top:14px;">
+        <div class="loading"><div class="spinner"></div>Cargando...</div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════ FACTURACIÓN ═══════════════════════════════ -->
+    <div class="section" id="sec-facturacion">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">🧾 Nueva Factura / Remito</div>
+          <div class="form-group">
+            <label>Cliente</label>
+            <select id="fac-cliente">
+              <option value="">— Seleccionar —</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Número</label>
+              <input type="text" id="fac-num" placeholder="0001-00000001">
+            </div>
+            <div class="form-group">
+              <label>Fecha</label>
+              <input type="date" id="fac-fecha">
+            </div>
+          </div>
+          <div id="fac-items">
+            <div class="form-row-3" style="margin-bottom:6px; font-size:11px; opacity:0.5; text-transform:uppercase; letter-spacing:1px;">
+              <span>Descripción</span><span>Cant.</span><span>Precio</span>
+            </div>
+            <div id="fac-items-list"></div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="addFacItem()" style="margin-bottom:14px; margin-top:4px;">+ Agregar ítem</button>
+          <div class="form-group">
+            <label>Notas / Condiciones</label>
+            <textarea id="fac-notas" placeholder="Condición de pago, observaciones..."></textarea>
+          </div>
+          <div style="display:flex; gap:8px; justify-content:flex-end;">
+            <button class="btn btn-ghost" onclick="previewFactura()">👁 Vista previa</button>
+            <button class="btn btn-primary" onclick="saveFactura()">💾 Guardar</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📋 Facturas Emitidas</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>N°</th><th>Cliente</th><th>Fecha</th><th>Total</th><th>Estado</th><th></th></tr></thead>
+              <tbody id="facturas-tbody">
+                <tr><td colspan="6" style="text-align:center; opacity:0.4; padding:20px;">Sin facturas</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════ CAJA ═══════════════════════════════ -->
+    <div class="section" id="sec-caja">
+      <div class="saldo-bar">
+        <div>
+          <div class="label">Saldo Actual</div>
+          <div class="amount">$<span id="caja-saldo">0.00</span></div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:11px; opacity:0.5; margin-bottom:4px;">HOY</div>
+          <div style="font-size:14px; color: rgba(255,255,255,0.7);">
+            ↑ $<span id="caja-ingresos-hoy">0.00</span> &nbsp; ↓ $<span id="caja-egresos-hoy">0.00</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">+ Registrar Movimiento</div>
+          <div class="tabs" id="caja-tipo-tabs" style="margin-bottom:14px;">
+            <div class="tab active" onclick="selectCajaTipo('ingreso', this)">💚 Ingreso</div>
+            <div class="tab" onclick="selectCajaTipo('egreso', this)">🔴 Egreso</div>
+          </div>
+          <input type="hidden" id="caja-tipo" value="ingreso">
+          <div class="form-group">
+            <label>Descripción</label>
+            <input type="text" id="caja-desc" placeholder="Ej: Venta pedido #12, Compra avena...">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Monto ($)</label>
+              <input type="number" id="caja-monto" placeholder="0.00" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+              <label>Categoría</label>
+              <select id="caja-cat">
+                <option>Ventas</option>
+                <option>Compra insumos</option>
+                <option>Gastos generales</option>
+                <option>Producción</option>
+                <option>Otros</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Fecha</label>
+            <input type="date" id="caja-fecha">
+          </div>
+          <button class="btn btn-primary" style="width:100%;" onclick="saveCaja()">Registrar Movimiento</button>
+        </div>
+
+        <div class="card">
+          <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
+            <span>📜 Movimientos</span>
+            <input class="search-input" style="width:130px;" type="month" id="caja-mes" onchange="loadCaja()">
+          </div>
+          <div id="caja-movimientos">
+            <div class="loading"><div class="spinner"></div>Cargando...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════ CONFIGURACIÓN ═══════════════════════════════ -->
+    <div class="section" id="sec-configuracion">
+      <div class="config-panel">
+        <h3>🔗 Conexión con Google Sheets</h3>
+        <p>Para que la app guarde y comparta datos entre las dos PCs, necesitás vincular una Planilla de Google Sheets. Seguí las instrucciones de la guía de configuración incluida.</p>
+        <div class="form-group">
+          <label>Google Client ID (para login con Google)</label>
+          <input type="text" id="google-client-id" placeholder="xxxxxxxx.apps.googleusercontent.com" value="">
+        </div>
+        <div class="form-group">
+          <label>ID de la Planilla de Google Sheets</label>
+          <input type="text" id="sheet-id" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms" value="">
+        </div>
+        <div class="form-group">
+          <label>API Key de Google</label>
+          <input type="text" id="api-key" placeholder="AIzaSy..." value="">
+        </div>
+        <div style="display:flex; gap:8px; margin-top:4px;">
+          <button class="btn btn-primary" onclick="saveConfig()">Guardar Configuración</button>
+          <button class="btn btn-ghost" style="color:rgba(255,255,255,0.6); border-color:rgba(255,255,255,0.2);" onclick="testConnection()">Probar Conexión</button>
+        </div>
+      </div>
+
+      <!-- PANEL DE USUARIOS AUTORIZADOS (solo Admin) -->
+      <div class="card" id="panel-usuarios" style="margin-bottom:16px;">
+        <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
+          <span>👥 Usuarios Autorizados</span>
+          <button class="btn btn-primary btn-sm" onclick="openModalAddUser()">+ Agregar</button>
+        </div>
+        <p style="font-size:12.5px; color:var(--bark); opacity:0.7; margin-bottom:14px;">
+          Solo los emails de Google registrados aquí pueden entrar a la app.
+        </p>
+        <div id="usuarios-list"></div>
+      </div>
+
+      <div class="alert alert-info" id="config-status" style="display:none">
+        🟢 <span id="config-status-text"></span>
+      </div>
+
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-title">🏭 Datos de la Empresa</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nombre</label>
+            <input type="text" id="cfg-empresa" placeholder="Murdocca Barritas">
+          </div>
+          <div class="form-group">
+            <label>CUIT / CUIL</label>
+            <input type="text" id="cfg-cuit" placeholder="20-12345678-9">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Teléfono</label>
+            <input type="text" id="cfg-tel" placeholder="+54 9 11...">
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="cfg-email" placeholder="hola@murdocca.com">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Dirección</label>
+          <input type="text" id="cfg-dir" placeholder="Calle, número, ciudad">
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="saveEmpresa()">Guardar Datos</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📋 Guía de Configuración Google Sheets</div>
+        <div style="font-size:13px; line-height:1.8; color:var(--bark);">
+          <p style="margin-bottom:8px;"><strong>Paso 1:</strong> Ir a <a href="https://sheets.google.com" target="_blank" style="color:var(--honey-dark);">Google Sheets</a> y crear una planilla nueva llamada <em>"Murdocca DB"</em>.</p>
+          <p style="margin-bottom:8px;"><strong>Paso 2:</strong> Ir a <a href="https://console.cloud.google.com" target="_blank" style="color:var(--honey-dark);">Google Cloud Console</a>, crear un proyecto y habilitar la API de Google Sheets.</p>
+          <p style="margin-bottom:8px;"><strong>Paso 3:</strong> Crear una <em>API Key</em> y copiarla en el campo de arriba.</p>
+          <p style="margin-bottom:8px;"><strong>Paso 4:</strong> Copiar el ID de tu planilla (está en la URL entre /d/ y /edit) y pegarlo arriba.</p>
+          <p style="margin-bottom:8px;"><strong>Paso 5:</strong> En tu planilla, hacer la hoja pública (Compartir → Cualquiera con el enlace) para lectura.</p>
+          <p style="margin-bottom:0;"><strong>Paso 6:</strong> Hacer clic en "Probar Conexión". ¡Listo!</p>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main>
+
+<!-- ═════════════════════════ MODALS ═════════════════════════ -->
+
+<!-- Modal Stock -->
+<div class="modal-overlay" id="modal-stock">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-stock-title">Nuevo Ingrediente</div>
+      <button class="modal-close" onclick="closeModal('modal-stock')">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nombre</label>
+        <input type="text" id="s-nombre" placeholder="Ej: Avena, Miel, Chía...">
+      </div>
+      <div class="form-group">
+        <label>Unidad de medida</label>
+        <select id="s-unidad">
+          <option>kg</option>
+          <option>g</option>
+          <option>litros</option>
+          <option>ml</option>
+          <option>unidades</option>
+          <option>paquetes</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Stock actual</label>
+        <input type="number" id="s-stock" placeholder="0" min="0" step="0.01">
+      </div>
+      <div class="form-group">
+        <label>Stock mínimo</label>
+        <input type="number" id="s-minimo" placeholder="0" min="0" step="0.01">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Costo por unidad ($)</label>
+        <input type="number" id="s-costo" placeholder="0.00" min="0" step="0.01">
+      </div>
+      <div class="form-group">
+        <label>Proveedor</label>
+        <input type="text" id="s-proveedor" placeholder="Nombre del proveedor">
+      </div>
+    </div>
+    <input type="hidden" id="s-edit-id" value="">
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-stock')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveStock()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Cliente -->
+<div class="modal-overlay" id="modal-cliente">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-cliente-title">Nuevo Cliente</div>
+      <button class="modal-close" onclick="closeModal('modal-cliente')">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nombre / Empresa</label>
+        <input type="text" id="c-nombre" placeholder="Juan Pérez">
+      </div>
+      <div class="form-group">
+        <label>Teléfono / WhatsApp</label>
+        <input type="text" id="c-tel" placeholder="+54 9 11...">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="c-email" placeholder="juan@email.com">
+    </div>
+    <div class="form-group">
+      <label>Dirección</label>
+      <input type="text" id="c-dir" placeholder="Calle, número, ciudad">
+    </div>
+    <div class="form-group">
+      <label>Notas</label>
+      <textarea id="c-notas" placeholder="Preferencias, condiciones de pago..."></textarea>
+    </div>
+    <input type="hidden" id="c-edit-id" value="">
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-cliente')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveCliente()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Pedido -->
+<div class="modal-overlay" id="modal-pedido">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Nuevo Pedido</div>
+      <button class="modal-close" onclick="closeModal('modal-pedido')">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Cliente</label>
+        <select id="p-cliente">
+          <option value="">— Seleccionar —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Fecha de entrega</label>
+        <input type="date" id="p-fecha">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Detalle del pedido</label>
+      <textarea id="p-detalle" placeholder="Ej: 50 barritas clásicas, 30 con chocolate..."></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Total ($)</label>
+        <input type="number" id="p-total" placeholder="0.00" min="0" step="0.01">
+      </div>
+      <div class="form-group">
+        <label>Estado</label>
+        <select id="p-estado">
+          <option value="pendiente">Pendiente</option>
+          <option value="en preparacion">En preparación</option>
+          <option value="entregado">Entregado</option>
+          <option value="cobrado">Cobrado</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Notas</label>
+      <input type="text" id="p-notas" placeholder="Observaciones del pedido...">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-pedido')">Cancelar</button>
+      <button class="btn btn-primary" onclick="savePedido()">Guardar Pedido</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Agregar Ingrediente a Fórmula -->
+<div class="modal-overlay" id="modal-formula-ing">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Agregar Ingrediente a Receta</div>
+      <button class="modal-close" onclick="closeModal('modal-formula-ing')">✕</button>
+    </div>
+    <div class="form-group">
+      <label>Ingrediente</label>
+      <select id="fi-ing">
+        <option value="">— Seleccionar del stock —</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Cantidad por lote</label>
+        <input type="number" id="fi-qty" placeholder="0" min="0" step="0.001">
+      </div>
+      <div class="form-group">
+        <label>Unidad</label>
+        <input type="text" id="fi-unit-display" readonly style="background:var(--oat);">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-formula-ing')">Cancelar</button>
+      <button class="btn btn-primary" onclick="addIngToFormula()">Agregar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Factura Preview -->
+<div class="modal-overlay" id="modal-factura-preview">
+  <div class="modal" style="width:600px;">
+    <div class="modal-header">
+      <div class="modal-title">Vista Previa</div>
+      <button class="modal-close" onclick="closeModal('modal-factura-preview')">✕</button>
+    </div>
+    <div id="factura-preview-content"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-factura-preview')">Cerrar</button>
+      <button class="btn btn-primary" onclick="printFactura()">🖨 Imprimir</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Agregar Usuario Autorizado -->
+<div class="modal-overlay" id="modal-add-user">
+  <div class="modal" style="width:420px;">
+    <div class="modal-header">
+      <div class="modal-title">Agregar Usuario Autorizado</div>
+      <button class="modal-close" onclick="closeModal('modal-add-user')">✕</button>
+    </div>
+    <div class="alert alert-info" style="margin-bottom:14px;">
+      ℹ️ El usuario deberá ingresar con esta cuenta de Gmail exactamente.
+    </div>
+    <div class="form-group">
+      <label>Email de Gmail</label>
+      <input type="email" id="new-user-email" placeholder="usuario@gmail.com">
+    </div>
+    <div class="form-group">
+      <label>Nombre</label>
+      <input type="text" id="new-user-name" placeholder="Nombre del usuario">
+    </div>
+    <div class="form-group">
+      <label>Rol</label>
+      <select id="new-user-role">
+        <option value="admin">👑 Admin — Acceso total (costos, config, todo)</option>
+        <option value="empleado">👤 Empleado — Stock, pedidos y clientes (sin costos ni config)</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-user')">Cancelar</button>
+      <button class="btn btn-primary" onclick="addAuthorizedUser()">Agregar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// ESTADO GLOBAL
+// ═══════════════════════════════════════════════════
+const APP = {
+  config: {
+    sheetId: '', apiKey: '', empresa: 'Murdocca', cuit: '', tel: '', email: '', dir: '',
+    googleClientId: ''
+  },
+  stock: [],
+  clientes: [],
+  pedidos: [],
+  facturas: [],
+  caja: [],
+  formulas: { 'Barrita Clásica': [] },
+  precios: [],
+  // Usuarios autorizados: [{ email, name, role: 'admin'|'empleado' }]
+  authorizedUsers: [],
+  currentFormula: 'Barrita Clásica',
+  pedidoFilter: 'todos',
+  nextPedidoId: 1,
+  nextFacturaId: 1,
+};
+
+// Usuario logueado actual
+let currentUser = null; // { email, name, picture, role }
+
+// ═══════════════════════════════════════════════════
+// AUTH — GOOGLE LOGIN
+// ═══════════════════════════════════════════════════
+function initGoogleAuth() {
+  const clientId = APP.config.googleClientId;
+  if (!clientId) return; // Sin Client ID configurado aún
+
+  google.accounts.id.initialize({
+    client_id: clientId,
+    callback: handleGoogleCredential,
+    auto_select: false,
+  });
+}
+
+function loginWithGoogle() {
+  const clientId = APP.config.googleClientId;
+  if (!clientId) {
+    // Modo demo: sin Client ID, mostrar selector simplificado
+    showDemoLogin();
+    return;
+  }
+  google.accounts.id.prompt();
+}
+
+function handleGoogleCredential(response) {
+  try {
+    const payload = parseJwt(response.credential);
+    const email = payload.email;
+    const name = payload.name;
+    const picture = payload.picture;
+    attemptLogin(email, name, picture);
+  } catch(e) {
+    document.getElementById('login-error').classList.add('show');
+  }
+}
+
+function parseJwt(token) {
+  const base64 = token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
+  return JSON.parse(atob(base64));
+}
+
+function attemptLogin(email, name, picture) {
+  // Verificar si está en la lista de autorizados
+  const user = APP.authorizedUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
+
+  if (!user && APP.authorizedUsers.length > 0) {
+    document.getElementById('login-error').classList.add('show');
+    return;
+  }
+
+  // Si no hay usuarios configurados todavía, el primero en entrar es admin
+  const role = user ? user.role : 'admin';
+  const displayName = user ? user.name : name;
+
+  currentUser = { email, name: displayName || name, picture, role };
+  sessionStorage.setItem('murdocca_user', JSON.stringify(currentUser));
+
+  document.getElementById('login-error').classList.remove('show');
+  enterApp();
+}
+
+function enterApp() {
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app-sidebar').style.display = '';
+  document.querySelector('.main').style.display = '';
+
+  // Mostrar chip de usuario
+  const chip = document.getElementById('user-chip');
+  chip.style.display = 'flex';
+  const initials = currentUser.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('user-initials').textContent = initials;
+  document.getElementById('user-display-name').textContent = currentUser.name.split(' ')[0];
+  document.getElementById('dd-name').textContent = currentUser.name;
+  document.getElementById('dd-email').textContent = currentUser.email;
+
+  const roleBadge = document.getElementById('user-role-badge');
+  roleBadge.textContent = currentUser.role === 'admin' ? 'Admin' : 'Empleado';
+  roleBadge.className = 'user-role-badge ' + (currentUser.role === 'admin' ? 'role-admin' : 'role-empleado');
+
+  // Aplicar restricciones de rol
+  applyRoleRestrictions();
+  renderDashboard();
+}
+
+function applyRoleRestrictions() {
+  const isEmpleado = currentUser && currentUser.role === 'empleado';
+
+  // Ocultar secciones restringidas para empleado
+  const restricted = ['costos', 'configuracion'];
+  document.querySelectorAll('.nav-item').forEach(item => {
+    const text = item.textContent.trim().toLowerCase();
+    if (isEmpleado && (text.includes('costos') || text.includes('configuración'))) {
+      item.style.opacity = '0.3';
+      item.style.pointerEvents = 'none';
+    }
+  });
+
+  // Ocultar botón sync para empleados
+  if (isEmpleado) {
+    document.querySelectorAll('.btn-ghost').forEach(b => {
+      if (b.textContent.includes('Sincronizar')) b.style.display = 'none';
+    });
+  }
+}
+
+function logout() {
+  currentUser = null;
+  sessionStorage.removeItem('murdocca_user');
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('user-chip').style.display = 'none';
+  document.getElementById('user-dropdown').classList.remove('open');
+  if (APP.config.googleClientId) {
+    google.accounts.id.disableAutoSelect();
+  }
+}
+
+function toggleUserDropdown() {
+  document.getElementById('user-dropdown').classList.toggle('open');
+}
+
+document.addEventListener('click', e => {
+  const chip = document.getElementById('user-chip');
+  if (chip && !chip.contains(e.target)) {
+    document.getElementById('user-dropdown').classList.remove('open');
+  }
+});
+
+// DEMO LOGIN (sin Google Client ID configurado)
+function showDemoLogin() {
+  const box = document.querySelector('.login-box');
+  box.innerHTML = `
+    <div class="login-logo">Murdocca</div>
+    <div class="login-sub">Modo Demo</div>
+    <div class="login-tagline" style="margin-bottom:20px;">
+      Para usar login real con Google, configurá el Client ID en Configuración.<br>
+      Por ahora, seleccioná tu perfil:
+    </div>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <button class="google-btn" onclick="demoLogin('admin')">
+        👑 Entrar como Admin
+      </button>
+      <button class="google-btn" onclick="demoLogin('empleado')" style="background:var(--oat); color:var(--chocolate);">
+        👤 Entrar como Empleado
+      </button>
+    </div>
+    <div class="login-footer" style="margin-top:20px;">Configurá Google Auth en ⚙️ Configuración</div>
+  `;
+}
+
+function demoLogin(role) {
+  const name = role === 'admin' ? 'Administrador' : 'Empleado';
+  attemptLogin(role + '@demo.local', name, null);
+}
+
+// ═══════════════════════════════════════════════════
+// GESTIÓN DE USUARIOS AUTORIZADOS
+// ═══════════════════════════════════════════════════
+function openModalAddUser() {
+  document.getElementById('new-user-email').value = '';
+  document.getElementById('new-user-name').value = '';
+  document.getElementById('new-user-role').value = 'empleado';
+  openModal('modal-add-user');
+}
+
+function addAuthorizedUser() {
+  const email = document.getElementById('new-user-email').value.trim().toLowerCase();
+  const name = document.getElementById('new-user-name').value.trim();
+  const role = document.getElementById('new-user-role').value;
+  if (!email) return alert('Ingresá un email');
+  if (APP.authorizedUsers.find(u => u.email === email)) return alert('Este usuario ya está agregado');
+  APP.authorizedUsers.push({ email, name, role });
+  saveLocal();
+  closeModal('modal-add-user');
+  renderUsuariosList();
+  showToast('Usuario agregado ✓');
+}
+
+function removeUser(email) {
+  if (!confirm('¿Eliminar este usuario?')) return;
+  APP.authorizedUsers = APP.authorizedUsers.filter(u => u.email !== email);
+  saveLocal();
+  renderUsuariosList();
+}
+
+function renderUsuariosList() {
+  const div = document.getElementById('usuarios-list');
+  if (!div) return;
+  if (APP.authorizedUsers.length === 0) {
+    div.innerHTML = `<div class="empty-state"><div class="icon">👤</div><p>Sin usuarios aún. El primero en entrar con Google será Admin automáticamente.</p></div>`;
+    return;
+  }
+  div.innerHTML = APP.authorizedUsers.map(u => `
+    <div class="user-row">
+      <div class="user-avatar-initials" style="background:${u.role==='admin'?'var(--honey)':'var(--sage-light)'}">
+        ${(u.name||u.email).slice(0,2).toUpperCase()}
+      </div>
+      <div class="user-row-info">
+        <div style="font-size:13.5px; font-weight:500;">${u.name || '—'}</div>
+        <div class="user-row-email">${u.email}</div>
+      </div>
+      <span class="user-role-badge ${u.role==='admin'?'role-admin':'role-empleado'}">${u.role==='admin'?'Admin':'Empleado'}</span>
+      <button class="icon-btn" onclick="removeUser('${u.email}')">🗑</button>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// PERSISTENCIA LOCAL (localStorage como fallback)
+// ═══════════════════════════════════════════════════
+function saveLocal() {
+  try {
+    const data = {
+      stock: APP.stock, clientes: APP.clientes, pedidos: APP.pedidos,
+      facturas: APP.facturas, caja: APP.caja, formulas: APP.formulas,
+      precios: APP.precios, config: APP.config,
+      authorizedUsers: APP.authorizedUsers,
+      nextPedidoId: APP.nextPedidoId, nextFacturaId: APP.nextFacturaId
+    };
+    localStorage.setItem('murdocca_data', JSON.stringify(data));
+  } catch(e) { console.warn('No se pudo guardar localmente', e); }
+}
+
+function loadLocal() {
+  try {
+    const raw = localStorage.getItem('murdocca_data');
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    Object.assign(APP, data);
+    APP.config = data.config || APP.config;
+    if (data.formulas) APP.formulas = data.formulas;
+    if (data.authorizedUsers) APP.authorizedUsers = data.authorizedUsers;
+  } catch(e) { console.warn('No se pudo cargar datos locales', e); }
+}
+
+// ═══════════════════════════════════════════════════
+// GOOGLE SHEETS API (lectura/escritura)
+// ═══════════════════════════════════════════════════
+async function gSheetRead(range) {
+  if (!APP.config.sheetId || !APP.config.apiKey) return null;
+  try {
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${APP.config.sheetId}/values/${range}?key=${APP.config.apiKey}`;
+    const r = await fetch(url);
+    const d = await r.json();
+    return d.values || [];
+  } catch(e) { return null; }
+}
+
+async function gSheetAppend(range, values) {
+  if (!APP.config.sheetId || !APP.config.apiKey) return false;
+  try {
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${APP.config.sheetId}/values/${range}:append?valueInputOption=RAW&key=${APP.config.apiKey}`;
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ values })
+    });
+    return r.ok;
+  } catch(e) { return false; }
+}
+
+function setSyncStatus(state, text) {
+  const dot = document.getElementById('syncDot');
+  const txt = document.getElementById('syncText');
+  dot.className = 'sync-dot' + (state === 'sync' ? ' syncing' : state === 'error' ? ' error' : '');
+  txt.textContent = text;
+}
+
+async function syncData() {
+  setSyncStatus('sync', 'Sincronizando...');
+  saveLocal();
+  // Si tienen Google Sheets configurado, intentar sincronizar
+  if (APP.config.sheetId && APP.config.apiKey) {
+    const test = await gSheetRead('Stock!A1');
+    if (test !== null) {
+      setSyncStatus('ok', 'Sincronizado ✓');
+      setTimeout(() => setSyncStatus('ok', 'Conectado a Sheets'), 2000);
+      return;
+    }
+    setSyncStatus('error', 'Error de conexión');
+  } else {
+    setSyncStatus('ok', 'Guardado local ✓');
+    setTimeout(() => setSyncStatus('', 'Solo modo local'), 2000);
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// NAVEGACIÓN
+// ═══════════════════════════════════════════════════
+const PAGE_TITLES = {
+  dashboard: 'Dashboard', formula: 'Fórmula de Producción', stock: 'Control de Stock',
+  costos: 'Costos & Precios', clientes: 'Clientes', pedidos: 'Pedidos',
+  facturacion: 'Facturación', caja: 'Control de Caja', configuracion: 'Configuración'
+};
+
+const TOP_ACTIONS = {
+  dashboard: null, formula: null, stock: 'Nuevo Ingrediente',
+  costos: null, clientes: 'Nuevo Cliente', pedidos: 'Nuevo Pedido',
+  facturacion: 'Nueva Factura', caja: null, configuracion: null
+};
+
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.textContent.trim().toLowerCase().includes(id.toLowerCase()) ||
+        (id === 'dashboard' && n.textContent.includes('Dashboard'))) {
+      n.classList.add('active');
+    }
+  });
+  document.getElementById('pageTitle').textContent = PAGE_TITLES[id] || id;
+  const topBtn = document.getElementById('topActionBtn');
+  if (TOP_ACTIONS[id]) { topBtn.style.display = ''; topBtn.textContent = '+ ' + TOP_ACTIONS[id]; }
+  else { topBtn.style.display = 'none'; }
+  onSectionLoad(id);
+}
+
+function handleTopAction() {
+  const active = document.querySelector('.section.active').id.replace('sec-', '');
+  if (active === 'stock') openModalStock();
+  else if (active === 'clientes') openModalCliente();
+  else if (active === 'pedidos') openModalPedido();
+  else if (active === 'facturacion') clearFactura();
+}
+
+function onSectionLoad(id) {
+  if (id === 'dashboard') renderDashboard();
+  else if (id === 'stock') renderStock();
+  else if (id === 'formula') renderFormula();
+  else if (id === 'clientes') renderClientes();
+  else if (id === 'pedidos') renderPedidos();
+  else if (id === 'caja') { loadCaja(); updateSaldo(); }
+  else if (id === 'facturacion') { populateClienteSelects(); renderFacturas(); addFacItemIfEmpty(); }
+  else if (id === 'configuracion') loadConfig();
+}
+
+// ═══════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════
+function renderDashboard() {
+  const alertas = APP.stock.filter(s => parseFloat(s.stock) < parseFloat(s.minimo)).length;
+  const pendientes = APP.pedidos.filter(p => p.estado === 'pendiente').length;
+  const saldo = APP.caja.reduce((a, m) => a + (m.tipo === 'ingreso' ? parseFloat(m.monto) : -parseFloat(m.monto)), 0);
+
+  document.getElementById('ds-alertas').textContent = alertas;
+  document.getElementById('ds-pedidos').textContent = pendientes;
+  document.getElementById('ds-saldo').textContent = formatMoney(saldo);
+  document.getElementById('ds-clientes').textContent = APP.clientes.length;
+
+  // Stock crítico
+  const criticos = APP.stock.filter(s => parseFloat(s.stock) <= parseFloat(s.minimo));
+  const stockDiv = document.getElementById('dash-stock-critico');
+  if (criticos.length === 0) {
+    stockDiv.innerHTML = '<div class="empty-state"><div class="icon">✅</div><p>Todo el stock está OK</p></div>';
+  } else {
+    stockDiv.innerHTML = criticos.map(s => `
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--oat);">
+        <span style="font-size:13px;">${s.nombre}</span>
+        <span class="badge badge-red">${s.stock} ${s.unidad}</span>
+      </div>`).join('');
+  }
+
+  // Últimos pedidos
+  const recientes = [...APP.pedidos].sort((a,b) => b.id - a.id).slice(0, 5);
+  const pedDiv = document.getElementById('dash-pedidos-recientes');
+  if (recientes.length === 0) {
+    pedDiv.innerHTML = '<div class="empty-state"><div class="icon">🛒</div><p>Sin pedidos registrados</p></div>';
+  } else {
+    pedDiv.innerHTML = recientes.map(p => `
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--oat);">
+        <div>
+          <div style="font-size:13px; font-weight:600;">${p.cliente}</div>
+          <div style="font-size:11px; opacity:0.5;">${p.fecha}</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-family:DM Mono, monospace; font-size:13px;">$${formatMoney(p.total)}</span>
+          <span class="badge ${estadoBadge(p.estado)}">${p.estado}</span>
+        </div>
+      </div>`).join('');
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// STOCK
+// ═══════════════════════════════════════════════════
+let stockFilter = '';
+
+function filterStock(v) { stockFilter = v.toLowerCase(); renderStock(); }
+
+function renderStock() {
+  const tbody = document.getElementById('stock-tbody');
+  let items = APP.stock.filter(s => s.nombre.toLowerCase().includes(stockFilter));
+  if (items.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="icon">📦</div><p>Sin ingredientes registrados</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = items.map((s, i) => {
+    const ok = parseFloat(s.stock) >= parseFloat(s.minimo);
+    const low = parseFloat(s.stock) > 0 && !ok;
+    const estado = parseFloat(s.stock) <= 0 ? 'Sin stock' : low ? 'Bajo' : 'OK';
+    const badge = parseFloat(s.stock) <= 0 ? 'badge-red' : low ? 'badge-amber' : 'badge-green';
+    return `<tr>
+      <td><strong>${s.nombre}</strong>${s.proveedor ? `<br><span style="font-size:11px;opacity:0.5;">${s.proveedor}</span>` : ''}</td>
+      <td style="font-family:DM Mono,monospace;">${s.stock}</td>
+      <td style="font-family:DM Mono,monospace;opacity:0.6;">${s.minimo}</td>
+      <td>${s.unidad}</td>
+      <td style="font-family:DM Mono,monospace;">$${formatMoney(s.costo)}</td>
+      <td><span class="badge ${badge}">${estado}</span></td>
+      <td>
+        <button class="icon-btn" onclick="editStock(${i})" title="Editar">✏️</button>
+        <button class="icon-btn" onclick="deleteStock(${i})" title="Eliminar">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openModalStock(idx) {
+  clearModalStock();
+  if (idx !== undefined) {
+    const s = APP.stock[idx];
+    document.getElementById('modal-stock-title').textContent = 'Editar Ingrediente';
+    document.getElementById('s-nombre').value = s.nombre;
+    document.getElementById('s-unidad').value = s.unidad;
+    document.getElementById('s-stock').value = s.stock;
+    document.getElementById('s-minimo').value = s.minimo;
+    document.getElementById('s-costo').value = s.costo;
+    document.getElementById('s-proveedor').value = s.proveedor || '';
+    document.getElementById('s-edit-id').value = idx;
+  } else {
+    document.getElementById('modal-stock-title').textContent = 'Nuevo Ingrediente';
+  }
+  openModal('modal-stock');
+}
+
+function clearModalStock() {
+  ['s-nombre','s-stock','s-minimo','s-costo','s-proveedor'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('s-unidad').value = 'kg';
+  document.getElementById('s-edit-id').value = '';
+}
+
+function editStock(i) { openModalStock(i); }
+
+function deleteStock(i) {
+  if (!confirm('¿Eliminar este ingrediente?')) return;
+  APP.stock.splice(i, 1);
+  saveLocal();
+  renderStock();
+}
+
+function saveStock() {
+  const nombre = document.getElementById('s-nombre').value.trim();
+  if (!nombre) return alert('Ingresá un nombre');
+  const item = {
+    nombre, unidad: document.getElementById('s-unidad').value,
+    stock: parseFloat(document.getElementById('s-stock').value) || 0,
+    minimo: parseFloat(document.getElementById('s-minimo').value) || 0,
+    costo: parseFloat(document.getElementById('s-costo').value) || 0,
+    proveedor: document.getElementById('s-proveedor').value.trim()
+  };
+  const editId = document.getElementById('s-edit-id').value;
+  if (editId !== '') APP.stock[parseInt(editId)] = item;
+  else APP.stock.push(item);
+  saveLocal();
+  closeModal('modal-stock');
+  renderStock();
+  // Actualizar select de formula
+  populateFormulaIngSelect();
+}
+
+// ═══════════════════════════════════════════════════
+// FÓRMULA
+// ═══════════════════════════════════════════════════
+function renderFormulaTabs() {
+  const tabsEl = document.getElementById('formula-tabs');
+  tabsEl.innerHTML = Object.keys(APP.formulas).map(name =>
+    `<div class="tab ${name === APP.currentFormula ? 'active' : ''}" onclick="selectFormula('${name}', this)">${name}</div>`
+  ).join('') + `<div class="tab" onclick="addFormulaVariedad()">+ Variedad</div>`;
+}
+
+function selectFormula(name, el) {
+  APP.currentFormula = name;
+  document.querySelectorAll('#formula-tabs .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderFormulaList();
+  calcFormulaCost();
+}
+
+function renderFormula() {
+  renderFormulaTabs();
+  renderFormulaList();
+  calcFormulaCost();
+  populateFormulaIngSelect();
+}
+
+function renderFormulaList() {
+  const lista = document.getElementById('formula-lista');
+  const ings = APP.formulas[APP.currentFormula] || [];
+  if (ings.length === 0) {
+    lista.innerHTML = '<div class="empty-state"><div class="icon">🧪</div><p>Agregá ingredientes a esta receta</p></div>';
+    return;
+  }
+  lista.innerHTML = ings.map((fi, i) => {
+    const stockItem = APP.stock.find(s => s.nombre === fi.nombre);
+    const costUnit = stockItem ? parseFloat(stockItem.costo) : 0;
+    const totalCost = costUnit * parseFloat(fi.qty);
+    return `<div class="formula-ingredient">
+      <span class="fi-name">${fi.nombre}</span>
+      <input class="fi-qty" type="number" value="${fi.qty}" min="0" step="0.001" onchange="updateFormulaQty(${i}, this.value)">
+      <span class="fi-unit">${fi.unidad}</span>
+      <span class="fi-cost">$${formatMoney(totalCost)}</span>
+      <button class="icon-btn" onclick="removeFormulaIng(${i})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function updateFormulaQty(i, val) {
+  APP.formulas[APP.currentFormula][i].qty = parseFloat(val) || 0;
+  calcFormulaCost();
+}
+
+function removeFormulaIng(i) {
+  APP.formulas[APP.currentFormula].splice(i, 1);
+  renderFormulaList();
+  calcFormulaCost();
+}
+
+function calcFormulaCost() {
+  const ings = APP.formulas[APP.currentFormula] || [];
+  const unidades = parseInt(document.getElementById('f-unidades').value) || 1;
+  const margen = parseInt(document.getElementById('f-margen').value) || 40;
+  document.getElementById('f-margen-label').textContent = margen;
+
+  let total = 0;
+  ings.forEach(fi => {
+    const stockItem = APP.stock.find(s => s.nombre === fi.nombre);
+    const costUnit = stockItem ? parseFloat(stockItem.costo) : 0;
+    total += costUnit * parseFloat(fi.qty);
+  });
+
+  const costUnit = total / unidades;
+  const precioFinal = costUnit * (1 + margen / 100);
+
+  document.getElementById('f-costo-total').textContent = '$' + formatMoney(total);
+  document.getElementById('f-costo-unit').textContent = formatMoney(costUnit);
+  document.getElementById('f-precio-sugerido').textContent = '$' + formatMoney(precioFinal);
+  document.getElementById('f-precio-final').textContent = '$' + formatMoney(precioFinal);
+}
+
+function openModalAddIngFormula() {
+  populateFormulaIngSelect();
+  document.getElementById('fi-ing').value = '';
+  document.getElementById('fi-qty').value = '';
+  document.getElementById('fi-unit-display').value = '';
+  document.getElementById('fi-ing').onchange = function() {
+    const s = APP.stock.find(x => x.nombre === this.value);
+    document.getElementById('fi-unit-display').value = s ? s.unidad : '';
+  };
+  openModal('modal-formula-ing');
+}
+
+function addIngToFormula() {
+  const nombre = document.getElementById('fi-ing').value;
+  const qty = parseFloat(document.getElementById('fi-qty').value) || 0;
+  if (!nombre) return alert('Seleccioná un ingrediente');
+  const s = APP.stock.find(x => x.nombre === nombre);
+  if (!APP.formulas[APP.currentFormula]) APP.formulas[APP.currentFormula] = [];
+  APP.formulas[APP.currentFormula].push({ nombre, qty, unidad: s ? s.unidad : '' });
+  closeModal('modal-formula-ing');
+  renderFormulaList();
+  calcFormulaCost();
+}
+
+function populateFormulaIngSelect() {
+  const sel = document.getElementById('fi-ing');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">— Seleccionar —</option>' +
+    APP.stock.map(s => `<option value="${s.nombre}">${s.nombre} (${s.unidad})</option>`).join('');
+}
+
+function saveFormula() {
+  saveLocal();
+  showToast('Receta guardada ✓');
+}
+
+function addFormulaVariedad() {
+  const nombre = prompt('Nombre de la nueva variedad:');
+  if (!nombre) return;
+  APP.formulas[nombre] = [];
+  APP.currentFormula = nombre;
+  saveLocal();
+  renderFormulaTabs();
+  renderFormulaList();
+  calcFormulaCost();
+}
+
+// ═══════════════════════════════════════════════════
+// COSTOS
+// ═══════════════════════════════════════════════════
+function calcPrecio() {
+  const costo = parseFloat(document.getElementById('calc-costo').value) || 0;
+  const margen = parseFloat(document.getElementById('calc-margen').value) || 0;
+  const iva = parseFloat(document.getElementById('calc-iva').value) || 0;
+  const precioSinIva = costo * (1 + margen / 100);
+  const precioFinal = precioSinIva * (1 + iva / 100);
+  document.getElementById('calc-result').textContent = formatMoney(precioFinal);
+}
+
+function savePrecio() {
+  const producto = document.getElementById('calc-producto').value;
+  const costo = parseFloat(document.getElementById('calc-costo').value) || 0;
+  const margen = parseFloat(document.getElementById('calc-margen').value) || 0;
+  const precio = parseFloat(document.getElementById('calc-result').textContent) || 0;
+  if (!costo) return alert('Ingresá el costo');
+  APP.precios.push({ producto, costo, precio, margen, fecha: today() });
+  saveLocal();
+  renderPrecios();
+}
+
+function renderPrecios() {
+  const tbody = document.getElementById('precios-tbody');
+  if (APP.precios.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; opacity:0.4; padding:20px;">Sin registros</td></tr>';
+    return;
+  }
+  tbody.innerHTML = APP.precios.slice(-10).reverse().map(p => `
+    <tr>
+      <td>${p.producto}</td>
+      <td style="font-family:DM Mono,monospace;">$${formatMoney(p.costo)}</td>
+      <td style="font-family:DM Mono,monospace; color:var(--honey-dark);">$${formatMoney(p.precio)}</td>
+      <td><span class="badge badge-green">${p.margen}%</span></td>
+    </tr>`).join('');
+}
+
+function calcProyeccion() {
+  const u = parseFloat(document.getElementById('proy-unidades').value) || 0;
+  const c = parseFloat(document.getElementById('proy-costo').value) || 0;
+  const p = parseFloat(document.getElementById('proy-precio').value) || 0;
+  document.getElementById('proy-costo-total').textContent = formatMoney(u * c);
+  document.getElementById('proy-ingreso').textContent = formatMoney(u * p);
+  document.getElementById('proy-ganancia').textContent = formatMoney((u * p) - (u * c));
+}
+
+// ═══════════════════════════════════════════════════
+// CLIENTES
+// ═══════════════════════════════════════════════════
+let clienteFilter = '';
+
+function filterClientes(v) { clienteFilter = v.toLowerCase(); renderClientes(); }
+
+function renderClientes() {
+  const tbody = document.getElementById('clientes-tbody');
+  let items = APP.clientes.filter(c => c.nombre.toLowerCase().includes(clienteFilter));
+  if (items.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="icon">👥</div><p>Sin clientes registrados</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = items.map((c, i) => `
+    <tr>
+      <td><strong>${c.nombre}</strong></td>
+      <td>${c.tel}</td>
+      <td>${c.email}</td>
+      <td>${c.dir}</td>
+      <td style="font-size:12px; opacity:0.7;">${c.notas}</td>
+      <td>
+        <button class="icon-btn" onclick="editCliente(${i})">✏️</button>
+        <button class="icon-btn" onclick="deleteCliente(${i})">🗑</button>
+      </td>
+    </tr>`).join('');
+}
+
+function openModalCliente(idx) {
+  ['c-nombre','c-tel','c-email','c-dir','c-notas'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('c-edit-id').value = '';
+  document.getElementById('modal-cliente-title').textContent = 'Nuevo Cliente';
+  if (idx !== undefined) {
+    const c = APP.clientes[idx];
+    document.getElementById('modal-cliente-title').textContent = 'Editar Cliente';
+    document.getElementById('c-nombre').value = c.nombre;
+    document.getElementById('c-tel').value = c.tel;
+    document.getElementById('c-email').value = c.email;
+    document.getElementById('c-dir').value = c.dir;
+    document.getElementById('c-notas').value = c.notas;
+    document.getElementById('c-edit-id').value = idx;
+  }
+  openModal('modal-cliente');
+}
+
+function editCliente(i) { openModalCliente(i); }
+
+function deleteCliente(i) {
+  if (!confirm('¿Eliminar este cliente?')) return;
+  APP.clientes.splice(i, 1);
+  saveLocal();
+  renderClientes();
+}
+
+function saveCliente() {
+  const nombre = document.getElementById('c-nombre').value.trim();
+  if (!nombre) return alert('Ingresá un nombre');
+  const item = {
+    nombre, tel: document.getElementById('c-tel').value,
+    email: document.getElementById('c-email').value,
+    dir: document.getElementById('c-dir').value,
+    notas: document.getElementById('c-notas').value
+  };
+  const editId = document.getElementById('c-edit-id').value;
+  if (editId !== '') APP.clientes[parseInt(editId)] = item;
+  else APP.clientes.push(item);
+  saveLocal();
+  closeModal('modal-cliente');
+  renderClientes();
+  populateClienteSelects();
+}
+
+function populateClienteSelects() {
+  const opts = '<option value="">— Seleccionar —</option>' +
+    APP.clientes.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
+  ['p-cliente','fac-cliente'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = opts;
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// PEDIDOS
+// ═══════════════════════════════════════════════════
+function filterPedidos(estado, el) {
+  APP.pedidoFilter = estado;
+  document.querySelectorAll('#sec-pedidos .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderPedidos();
+}
+
+function renderPedidos() {
+  populateClienteSelects();
+  const div = document.getElementById('pedidos-list');
+  let items = APP.pedidos;
+  if (APP.pedidoFilter !== 'todos') items = items.filter(p => p.estado === APP.pedidoFilter);
+  items = [...items].sort((a,b) => b.id - a.id);
+
+  if (items.length === 0) {
+    div.innerHTML = '<div class="empty-state" style="background:var(--warm-white); border:1px solid var(--oat); border-radius:12px;"><div class="icon">🛒</div><p>Sin pedidos en esta categoría</p></div>';
+    return;
+  }
+
+  div.innerHTML = items.map(p => `
+    <div class="pedido-card">
+      <div class="pedido-num">#${p.id}</div>
+      <div class="pedido-info">
+        <div class="pedido-cliente">${p.cliente}</div>
+        <div class="pedido-detalle">${p.detalle || ''} · Entrega: ${p.fecha}</div>
+      </div>
+      <span class="pedido-amount">$${formatMoney(p.total)}</span>
+      <select onchange="updatePedidoEstado(${p.id}, this.value)" style="padding:4px 8px; font-size:12px; border-radius:6px; border:1px solid var(--oat); background:var(--cream);">
+        ${['pendiente','en preparacion','entregado','cobrado'].map(e =>
+          `<option value="${e}" ${p.estado===e?'selected':''}>${e.charAt(0).toUpperCase()+e.slice(1)}</option>`
+        ).join('')}
+      </select>
+      <button class="icon-btn" onclick="deletePedido(${p.id})">🗑</button>
+    </div>`).join('');
+}
+
+function openModalPedido() {
+  populateClienteSelects();
+  document.getElementById('p-fecha').value = today();
+  document.getElementById('p-detalle').value = '';
+  document.getElementById('p-total').value = '';
+  document.getElementById('p-notas').value = '';
+  document.getElementById('p-estado').value = 'pendiente';
+  openModal('modal-pedido');
+}
+
+function savePedido() {
+  const cliente = document.getElementById('p-cliente').value;
+  if (!cliente) return alert('Seleccioná un cliente');
+  const pedido = {
+    id: APP.nextPedidoId++,
+    cliente,
+    fecha: document.getElementById('p-fecha').value,
+    detalle: document.getElementById('p-detalle').value,
+    total: parseFloat(document.getElementById('p-total').value) || 0,
+    estado: document.getElementById('p-estado').value,
+    notas: document.getElementById('p-notas').value,
+    creado: today()
+  };
+  APP.pedidos.push(pedido);
+  saveLocal();
+  closeModal('modal-pedido');
+  renderPedidos();
+}
+
+function updatePedidoEstado(id, estado) {
+  const p = APP.pedidos.find(x => x.id === id);
+  if (p) { p.estado = estado; saveLocal(); }
+}
+
+function deletePedido(id) {
+  if (!confirm('¿Eliminar este pedido?')) return;
+  APP.pedidos = APP.pedidos.filter(p => p.id !== id);
+  saveLocal();
+  renderPedidos();
+}
+
+// ═══════════════════════════════════════════════════
+// FACTURACIÓN
+// ═══════════════════════════════════════════════════
+let facItems = [{ desc: '', qty: 1, precio: 0 }];
+
+function addFacItemIfEmpty() {
+  if (facItems.length === 0) facItems = [{ desc: '', qty: 1, precio: 0 }];
+  renderFacItems();
+  document.getElementById('fac-fecha').value = today();
+  document.getElementById('fac-num').value = '0001-' + String(APP.nextFacturaId).padStart(8,'0');
+}
+
+function clearFactura() {
+  facItems = [{ desc: '', qty: 1, precio: 0 }];
+  renderFacItems();
+  document.getElementById('fac-fecha').value = today();
+  document.getElementById('fac-num').value = '0001-' + String(APP.nextFacturaId).padStart(8,'0');
+  document.getElementById('fac-notas').value = '';
+}
+
+function addFacItem() {
+  facItems.push({ desc: '', qty: 1, precio: 0 });
+  renderFacItems();
+}
+
+function renderFacItems() {
+  const div = document.getElementById('fac-items-list');
+  div.innerHTML = facItems.map((it, i) => `
+    <div class="form-row-3" style="margin-bottom:6px; align-items:center;">
+      <input type="text" value="${it.desc}" placeholder="Descripción" oninput="facItems[${i}].desc=this.value">
+      <input type="number" value="${it.qty}" min="1" oninput="facItems[${i}].qty=parseFloat(this.value)||1">
+      <div style="display:flex; gap:4px;">
+        <input type="number" value="${it.precio}" min="0" step="0.01" placeholder="$0" oninput="facItems[${i}].precio=parseFloat(this.value)||0">
+        <button class="icon-btn" onclick="removeFacItem(${i})">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function removeFacItem(i) {
+  if (facItems.length === 1) return;
+  facItems.splice(i, 1);
+  renderFacItems();
+}
+
+function getFacTotal() {
+  return facItems.reduce((a, it) => a + (it.qty * it.precio), 0);
+}
+
+function saveFactura() {
+  const cliente = document.getElementById('fac-cliente').value;
+  if (!cliente) return alert('Seleccioná un cliente');
+  const fac = {
+    id: APP.nextFacturaId++,
+    num: document.getElementById('fac-num').value,
+    cliente,
+    fecha: document.getElementById('fac-fecha').value,
+    items: [...facItems],
+    total: getFacTotal(),
+    notas: document.getElementById('fac-notas').value,
+    estado: 'emitida'
+  };
+  APP.facturas.push(fac);
+  saveLocal();
+  renderFacturas();
+  showToast('Factura guardada ✓');
+  clearFactura();
+}
+
+function renderFacturas() {
+  const tbody = document.getElementById('facturas-tbody');
+  if (APP.facturas.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; opacity:0.4; padding:20px;">Sin facturas</td></tr>';
+    return;
+  }
+  tbody.innerHTML = [...APP.facturas].reverse().map(f => `
+    <tr>
+      <td style="font-family:DM Mono,monospace; font-size:12px;">${f.num}</td>
+      <td>${f.cliente}</td>
+      <td>${f.fecha}</td>
+      <td style="font-family:DM Mono,monospace;">$${formatMoney(f.total)}</td>
+      <td><span class="badge badge-blue">${f.estado}</span></td>
+      <td><button class="icon-btn" onclick="previewFacturaById(${f.id})">👁</button></td>
+    </tr>`).join('');
+}
+
+function previewFactura() {
+  const cliente = document.getElementById('fac-cliente').value || '—';
+  const num = document.getElementById('fac-num').value;
+  const fecha = document.getElementById('fac-fecha').value;
+  showFacturaPreview({ num, cliente, fecha, items: facItems, total: getFacTotal(), notas: document.getElementById('fac-notas').value });
+}
+
+function previewFacturaById(id) {
+  const f = APP.facturas.find(x => x.id === id);
+  if (f) showFacturaPreview(f);
+}
+
+function showFacturaPreview(f) {
+  const html = `
+    <div class="factura-preview" id="print-area">
+      <div class="factura-header">
+        <div>
+          <div class="factura-empresa">${APP.config.empresa || 'Murdocca'}</div>
+          ${APP.config.cuit ? `<div style="font-size:12px; opacity:0.6;">CUIT: ${APP.config.cuit}</div>` : ''}
+          ${APP.config.tel ? `<div style="font-size:12px; opacity:0.6;">${APP.config.tel}</div>` : ''}
+        </div>
+        <div style="text-align:right;">
+          <div class="factura-num">${f.num}</div>
+          <div style="font-size:12px; opacity:0.6;">${f.fecha}</div>
+        </div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <div style="font-size:11px; opacity:0.5; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">Cliente</div>
+        <div style="font-weight:600;">${f.cliente}</div>
+      </div>
+      <table style="margin-bottom:14px;">
+        <thead><tr><th>Descripción</th><th>Cant.</th><th>Precio Unit.</th><th>Subtotal</th></tr></thead>
+        <tbody>
+          ${f.items.map(it => `<tr><td>${it.desc}</td><td>${it.qty}</td><td>$${formatMoney(it.precio)}</td><td>$${formatMoney(it.qty*it.precio)}</td></tr>`).join('')}
+        </tbody>
+      </table>
+      <div style="text-align:right; font-size:18px; font-weight:700; color:var(--honey-dark);">Total: $${formatMoney(f.total)}</div>
+      ${f.notas ? `<div style="margin-top:14px; font-size:12px; opacity:0.6; border-top:1px solid var(--oat); padding-top:10px;">${f.notas}</div>` : ''}
+    </div>`;
+  document.getElementById('factura-preview-content').innerHTML = html;
+  openModal('modal-factura-preview');
+}
+
+function printFactura() {
+  const content = document.getElementById('print-area').innerHTML;
+  const win = window.open('','','width=700,height=900');
+  win.document.write(`<html><head><title>Factura Murdocca</title><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet"><style>body{font-family:'DM Sans',sans-serif;padding:40px;color:#3D2B1F;} table{width:100%;border-collapse:collapse;} th,td{padding:8px;border-bottom:1px solid #eee;text-align:left;} th{font-size:11px;text-transform:uppercase;opacity:0.5;}</style></head><body>${content}</body></html>`);
+  win.document.close();
+  setTimeout(() => { win.print(); win.close(); }, 500);
+}
+
+// ═══════════════════════════════════════════════════
+// CAJA
+// ═══════════════════════════════════════════════════
+function selectCajaTipo(tipo, el) {
+  document.getElementById('caja-tipo').value = tipo;
+  document.querySelectorAll('#caja-tipo-tabs .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function updateSaldo() {
+  const saldo = APP.caja.reduce((a, m) => a + (m.tipo === 'ingreso' ? parseFloat(m.monto) : -parseFloat(m.monto)), 0);
+  document.getElementById('caja-saldo').textContent = formatMoney(saldo);
+
+  const hoy = today();
+  const movHoy = APP.caja.filter(m => m.fecha === hoy);
+  const ingHoy = movHoy.filter(m => m.tipo === 'ingreso').reduce((a, m) => a + parseFloat(m.monto), 0);
+  const egHoy = movHoy.filter(m => m.tipo === 'egreso').reduce((a, m) => a + parseFloat(m.monto), 0);
+  document.getElementById('caja-ingresos-hoy').textContent = formatMoney(ingHoy);
+  document.getElementById('caja-egresos-hoy').textContent = formatMoney(egHoy);
+}
+
+function loadCaja() {
+  updateSaldo();
+  const mes = document.getElementById('caja-mes').value;
+  let movs = APP.caja;
+  if (mes) movs = movs.filter(m => m.fecha && m.fecha.startsWith(mes));
+  movs = [...movs].reverse();
+
+  const div = document.getElementById('caja-movimientos');
+  if (movs.length === 0) {
+    div.innerHTML = '<div class="empty-state"><div class="icon">💰</div><p>Sin movimientos</p></div>';
+    return;
+  }
+  div.innerHTML = movs.map(m => `
+    <div class="caja-row">
+      <div class="caja-type ${m.tipo === 'ingreso' ? 'caja-ingreso' : 'caja-egreso'}">${m.tipo === 'ingreso' ? '↑' : '↓'}</div>
+      <div class="caja-desc">
+        <div>${m.desc}</div>
+        <div style="font-size:11px; opacity:0.5;">${m.categoria}</div>
+      </div>
+      <div class="caja-amount ${m.tipo === 'ingreso' ? 'pos' : 'neg'}">${m.tipo === 'ingreso' ? '+' : '-'}$${formatMoney(m.monto)}</div>
+      <div class="caja-date">${m.fecha}</div>
+    </div>`).join('');
+}
+
+function saveCaja() {
+  const desc = document.getElementById('caja-desc').value.trim();
+  const monto = parseFloat(document.getElementById('caja-monto').value) || 0;
+  if (!desc) return alert('Ingresá una descripción');
+  if (!monto) return alert('Ingresá un monto');
+  APP.caja.push({
+    tipo: document.getElementById('caja-tipo').value,
+    desc,
+    monto,
+    categoria: document.getElementById('caja-cat').value,
+    fecha: document.getElementById('caja-fecha').value || today()
+  });
+  saveLocal();
+  document.getElementById('caja-desc').value = '';
+  document.getElementById('caja-monto').value = '';
+  loadCaja();
+  showToast('Movimiento registrado ✓');
+}
+
+// ═══════════════════════════════════════════════════
+// CONFIGURACIÓN
+// ═══════════════════════════════════════════════════
+function loadConfig() {
+  document.getElementById('google-client-id').value = APP.config.googleClientId || '';
+  document.getElementById('sheet-id').value = APP.config.sheetId || '';
+  document.getElementById('api-key').value = APP.config.apiKey || '';
+  document.getElementById('cfg-empresa').value = APP.config.empresa || '';
+  document.getElementById('cfg-cuit').value = APP.config.cuit || '';
+  document.getElementById('cfg-tel').value = APP.config.tel || '';
+  document.getElementById('cfg-email').value = APP.config.email || '';
+  document.getElementById('cfg-dir').value = APP.config.dir || '';
+  renderUsuariosList();
+}
+
+function saveConfig() {
+  APP.config.googleClientId = document.getElementById('google-client-id').value.trim();
+  APP.config.sheetId = document.getElementById('sheet-id').value.trim();
+  APP.config.apiKey = document.getElementById('api-key').value.trim();
+  saveLocal();
+  showConfigStatus('Configuración guardada. Recargá la página para activar el login con Google.', 'info');
+}
+
+function saveEmpresa() {
+  APP.config.empresa = document.getElementById('cfg-empresa').value;
+  APP.config.cuit = document.getElementById('cfg-cuit').value;
+  APP.config.tel = document.getElementById('cfg-tel').value;
+  APP.config.email = document.getElementById('cfg-email').value;
+  APP.config.dir = document.getElementById('cfg-dir').value;
+  saveLocal();
+  showToast('Datos guardados ✓');
+}
+
+async function testConnection() {
+  if (!APP.config.sheetId || !APP.config.apiKey) {
+    showConfigStatus('Completá el ID de la planilla y la API Key primero.', 'error');
+    return;
+  }
+  showConfigStatus('Probando conexión...', 'info');
+  const result = await gSheetRead('A1');
+  if (result !== null) {
+    showConfigStatus('✅ Conexión exitosa con Google Sheets. La app está lista para compartir datos entre las dos PCs.', 'info');
+    setSyncStatus('ok', 'Conectado a Sheets');
+  } else {
+    showConfigStatus('❌ No se pudo conectar. Verificá el ID de la planilla y la API Key. Asegurate de que la planilla sea pública.', 'error');
+    setSyncStatus('error', 'Error de conexión');
+  }
+}
+
+function showConfigStatus(msg, type) {
+  const el = document.getElementById('config-status');
+  el.style.display = 'flex';
+  el.className = 'alert alert-' + (type === 'error' ? 'error' : 'info');
+  document.getElementById('config-status-text').textContent = msg;
+}
+
+// ═══════════════════════════════════════════════════
+// MODALS
+// ═══════════════════════════════════════════════════
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+// ═══════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.style.cssText = `position:fixed;bottom:24px;right:24px;background:var(--chocolate);color:white;padding:12px 20px;border-radius:10px;font-size:13px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.3);animation:modalIn 0.2s ease;`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+// ═══════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════
+function formatMoney(n) {
+  return parseFloat(n || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function today() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function estadoBadge(estado) {
+  const m = { pendiente: 'badge-amber', 'en preparacion': 'badge-blue', entregado: 'badge-green', cobrado: 'badge-green' };
+  return m[estado] || 'badge-amber';
+}
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+function init() {
+  loadLocal();
+
+  // Ocultar app hasta autenticar
+  document.getElementById('app-sidebar').style.display = 'none';
+  document.querySelector('.main').style.display = 'none';
+
+  // Verificar sesión existente
+  try {
+    const saved = sessionStorage.getItem('murdocca_user');
+    if (saved) {
+      currentUser = JSON.parse(saved);
+      enterApp();
+    }
+  } catch(e) {}
+
+  // Inicializar Google Auth si hay client ID
+  if (APP.config.googleClientId && typeof google !== 'undefined') {
+    setTimeout(initGoogleAuth, 500);
+  }
+
+  // Set fecha default en caja
+  const cajaFecha = document.getElementById('caja-fecha');
+  if (cajaFecha) cajaFecha.value = today();
+
+  const cajaMes = document.getElementById('caja-mes');
+  if (cajaMes) cajaMes.value = today().slice(0, 7);
+
+  populateClienteSelects();
+  populateFormulaIngSelect();
+
+  if (APP.config.sheetId) {
+    setSyncStatus('ok', 'Sheets configurado');
+  } else {
+    setSyncStatus('', 'Solo modo local');
+  }
+
+  document.getElementById('topActionBtn').style.display = 'none';
+  renderPrecios();
+}
+
+init();
+</script>
+</body>
+</html>
