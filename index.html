@@ -1996,39 +1996,153 @@ async function syncData() {
   }
   setSyncStatus('sync', 'Sincronizando...');
   saveLocal();
-  // Primero pull (traer cambios del otro usuario), luego push (subir los nuestros)
-  const pulled = await pullFromSheets();
-  if (!pulled) {
-    setSyncStatus('error', 'Error al sincronizar');
-    showToast('❌ No se pudo conectar con Google Sheets');
+
+  // 1. Bajar datos remotos
+  const res = await callScript('pull');
+
+  if (!res || !res.ok) {
+    // Sin datos remotos — solo subir lo local
+    const pushed = await pushToSheets();
+    if (pushed) {
+      setSyncStatus('ok', 'Sincronizado ✓');
+      showToast('✅ Datos guardados en la nube');
+      setTimeout(() => setSyncStatus('ok', 'Conectado a Sheets'), 2000);
+    } else {
+      setSyncStatus('error', 'Error al guardar');
+      showToast('❌ No se pudo conectar con Google Sheets');
+    }
     return;
   }
+
+  const remote = res.data || {};
+
+  // 2. Merge: combinar datos remotos con locales (gana el que tiene más datos)
+  const merged = mergeData(APP, remote);
+
+  // 3. Aplicar merged a APP
+  APP.stock = merged.stock;
+  APP.clientes = merged.clientes;
+  APP.pedidos = merged.pedidos;
+  APP.facturas = merged.facturas;
+  APP.caja = merged.caja;
+  APP.formulas = merged.formulas;
+  APP.precios = merged.precios;
+  APP.authorizedUsers = merged.authorizedUsers;
+  APP.nextPedidoId = merged.nextPedidoId;
+  APP.nextFacturaId = merged.nextFacturaId;
+  if (remote.config) {
+    APP.config.empresa = remote.config.empresa || APP.config.empresa;
+    APP.config.cuit = remote.config.cuit || APP.config.cuit;
+    APP.config.tel = remote.config.tel || APP.config.tel;
+    APP.config.email = remote.config.email || APP.config.email;
+    APP.config.dir = remote.config.dir || APP.config.dir;
+  }
+  saveLocal();
+
+  // 4. Subir el merge completo
   const pushed = await pushToSheets();
   if (pushed) {
     setSyncStatus('ok', 'Sincronizado ✓');
     showToast('✅ Datos sincronizados correctamente');
     setTimeout(() => setSyncStatus('ok', 'Conectado a Sheets'), 2000);
-    // Refrescar la vista actual
     const active = document.querySelector('.section.active');
     if (active) onSectionLoad(active.id.replace('sec-', ''));
   } else {
     setSyncStatus('error', 'Error al guardar');
-    showToast('⚠️ Se leyeron datos pero no se pudieron guardar');
+    showToast('⚠️ Datos combinados pero no se pudieron subir');
   }
+}
+
+// MERGE: combina datos locales y remotos sin perder nada
+function mergeData(local, remote) {
+  return {
+    stock:           mergeById(local.stock || [], remote.stock || [], 'nombre'),
+    clientes:        mergeById(local.clientes || [], remote.clientes || [], 'nombre'),
+    pedidos:         mergeById(local.pedidos || [], remote.pedidos || [], 'id'),
+    facturas:        mergeById(local.facturas || [], remote.facturas || [], 'id'),
+    caja:            mergeCaja(local.caja || [], remote.caja || []),
+    formulas:        mergeFormulas(local.formulas || {}, remote.formulas || {}),
+    precios:         mergePrecios(local.precios || [], remote.precios || []),
+    authorizedUsers: mergeById(local.authorizedUsers || [], remote.authorizedUsers || [], 'email'),
+    nextPedidoId:    Math.max(local.nextPedidoId || 1, remote.nextPedidoId || 1),
+    nextFacturaId:   Math.max(local.nextFacturaId || 1, remote.nextFacturaId || 1),
+  };
+}
+
+// Merge por campo único — si existe en ambos, gana el local (más reciente)
+function mergeById(localArr, remoteArr, key) {
+  const map = {};
+  // Primero remote (base)
+  remoteArr.forEach(item => { map[item[key]] = item; });
+  // Luego local sobreescribe (tiene prioridad)
+  localArr.forEach(item => { map[item[key]] = item; });
+  return Object.values(map);
+}
+
+// Merge de movimientos de caja (sin duplicados por desc+fecha+monto)
+function mergeCaja(local, remote) {
+  const key = m => `${m.fecha}|${m.desc}|${m.monto}|${m.tipo}`;
+  const map = {};
+  remote.forEach(m => { map[key(m)] = m; });
+  local.forEach(m => { map[key(m)] = m; });
+  return Object.values(map).sort((a,b) => (a.fecha||'') > (b.fecha||'') ? 1 : -1);
+}
+
+// Merge de fórmulas (combina variedades)
+function mergeFormulas(local, remote) {
+  const merged = { ...remote };
+  Object.keys(local).forEach(k => { merged[k] = local[k]; });
+  return merged;
+}
+
+// Merge de precios (combina sin duplicados)
+function mergePrecios(local, remote) {
+  const key = p => `${p.producto}|${p.fecha}|${p.precio}`;
+  const map = {};
+  remote.forEach(p => { map[key(p)] = p; });
+  local.forEach(p => { map[key(p)] = p; });
+  return Object.values(map);
 }
 
 // Auto-sync al cargar si hay script configurado
 async function autoSync() {
   if (!APP.config.scriptUrl) return;
   setSyncStatus('sync', 'Cargando datos...');
-  const pulled = await pullFromSheets();
-  if (pulled) {
-    setSyncStatus('ok', 'Conectado a Sheets');
-    const active = document.querySelector('.section.active');
-    if (active) onSectionLoad(active.id.replace('sec-', ''));
-  } else {
+  const res = await callScript('pull');
+  if (!res || !res.ok) {
     setSyncStatus('error', 'Sin conexión a Sheets');
+    return;
   }
+  const remote = res.data || {};
+  if (Object.keys(remote).length === 0) {
+    // Sheets vacío — subir datos locales
+    setSyncStatus('sync', 'Inicializando Sheets...');
+    await pushToSheets();
+    setSyncStatus('ok', 'Conectado a Sheets');
+    return;
+  }
+  const merged = mergeData(APP, remote);
+  APP.stock = merged.stock;
+  APP.clientes = merged.clientes;
+  APP.pedidos = merged.pedidos;
+  APP.facturas = merged.facturas;
+  APP.caja = merged.caja;
+  APP.formulas = merged.formulas;
+  APP.precios = merged.precios;
+  APP.authorizedUsers = merged.authorizedUsers;
+  APP.nextPedidoId = merged.nextPedidoId;
+  APP.nextFacturaId = merged.nextFacturaId;
+  if (remote.config) {
+    APP.config.empresa = remote.config.empresa || APP.config.empresa;
+    APP.config.cuit = remote.config.cuit || APP.config.cuit;
+    APP.config.tel = remote.config.tel || APP.config.tel;
+    APP.config.email = remote.config.email || APP.config.email;
+    APP.config.dir = remote.config.dir || APP.config.dir;
+  }
+  saveLocal();
+  setSyncStatus('ok', 'Conectado a Sheets');
+  const active = document.querySelector('.section.active');
+  if (active) onSectionLoad(active.id.replace('sec-', ''));
 }
 
 // ═══════════════════════════════════════════════════
