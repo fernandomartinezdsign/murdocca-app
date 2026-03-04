@@ -1362,6 +1362,10 @@
           <input type="text" id="google-client-id" placeholder="xxxxxxxx.apps.googleusercontent.com" value="">
         </div>
         <div class="form-group">
+          <label>🔗 URL del Apps Script (para sincronización)</label>
+          <input type="text" id="script-url" placeholder="https://script.google.com/macros/s/...exec">
+        </div>
+        <div class="form-group">
           <label>ID de la Planilla de Google Sheets</label>
           <input type="text" id="sheet-id" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms" value="">
         </div>
@@ -1659,7 +1663,7 @@
 // ═══════════════════════════════════════════════════
 const APP = {
   config: {
-    sheetId: '', apiKey: '', empresa: 'Murdocca', cuit: '', tel: '', email: '', dir: '',
+    sheetId: '', apiKey: '', scriptUrl: '', empresa: 'Murdocca', cuit: '', tel: '', email: '', dir: '',
     googleClientId: '123206066670-ebnvj0dc724mk5d9c48av2lg0rjrvqfc.apps.googleusercontent.com'
   },
   stock: [],
@@ -1900,30 +1904,8 @@ function loadLocal() {
 }
 
 // ═══════════════════════════════════════════════════
-// GOOGLE SHEETS API (lectura/escritura)
+// GOOGLE SHEETS — SINCRONIZACIÓN REAL VÍA APPS SCRIPT
 // ═══════════════════════════════════════════════════
-async function gSheetRead(range) {
-  if (!APP.config.sheetId || !APP.config.apiKey) return null;
-  try {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${APP.config.sheetId}/values/${range}?key=${APP.config.apiKey}`;
-    const r = await fetch(url);
-    const d = await r.json();
-    return d.values || [];
-  } catch(e) { return null; }
-}
-
-async function gSheetAppend(range, values) {
-  if (!APP.config.sheetId || !APP.config.apiKey) return false;
-  try {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${APP.config.sheetId}/values/${range}:append?valueInputOption=RAW&key=${APP.config.apiKey}`;
-    const r = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ values })
-    });
-    return r.ok;
-  } catch(e) { return false; }
-}
 
 function setSyncStatus(state, text) {
   const dot = document.getElementById('syncDot');
@@ -1932,21 +1914,118 @@ function setSyncStatus(state, text) {
   txt.textContent = text;
 }
 
-async function syncData() {
-  setSyncStatus('sync', 'Sincronizando...');
+// Llamar al Google Apps Script (Web App)
+async function callScript(action, payload = {}) {
+  const url = APP.config.scriptUrl;
+  if (!url) return null;
+  try {
+    const params = new URLSearchParams({ action, data: JSON.stringify(payload) });
+    const r = await fetch(`${url}?${params}`, { method: 'GET' });
+    const text = await r.text();
+    return JSON.parse(text);
+  } catch(e) {
+    console.error('Script error:', e);
+    return null;
+  }
+}
+
+// PUSH: subir todos los datos locales a Sheets
+async function pushToSheets() {
+  if (!APP.config.scriptUrl) return false;
+  const payload = {
+    stock: APP.stock,
+    clientes: APP.clientes,
+    pedidos: APP.pedidos,
+    facturas: APP.facturas,
+    caja: APP.caja,
+    formulas: APP.formulas,
+    precios: APP.precios,
+    authorizedUsers: APP.authorizedUsers,
+    config: {
+      empresa: APP.config.empresa,
+      cuit: APP.config.cuit,
+      tel: APP.config.tel,
+      email: APP.config.email,
+      dir: APP.config.dir,
+      googleClientId: APP.config.googleClientId,
+      scriptUrl: APP.config.scriptUrl
+    },
+    nextPedidoId: APP.nextPedidoId,
+    nextFacturaId: APP.nextFacturaId
+  };
+  const res = await callScript('push', payload);
+  return res && res.ok;
+}
+
+// PULL: bajar todos los datos desde Sheets
+async function pullFromSheets() {
+  if (!APP.config.scriptUrl) return false;
+  const res = await callScript('pull');
+  if (!res || !res.ok) return false;
+  const d = res.data;
+  if (d.stock) APP.stock = d.stock;
+  if (d.clientes) APP.clientes = d.clientes;
+  if (d.pedidos) APP.pedidos = d.pedidos;
+  if (d.facturas) APP.facturas = d.facturas;
+  if (d.caja) APP.caja = d.caja;
+  if (d.formulas) APP.formulas = d.formulas;
+  if (d.precios) APP.precios = d.precios;
+  if (d.authorizedUsers) APP.authorizedUsers = d.authorizedUsers;
+  if (d.nextPedidoId) APP.nextPedidoId = d.nextPedidoId;
+  if (d.nextFacturaId) APP.nextFacturaId = d.nextFacturaId;
+  // Mantener credenciales locales
+  if (d.config) {
+    APP.config.empresa = d.config.empresa || APP.config.empresa;
+    APP.config.cuit = d.config.cuit || APP.config.cuit;
+    APP.config.tel = d.config.tel || APP.config.tel;
+    APP.config.email = d.config.email || APP.config.email;
+    APP.config.dir = d.config.dir || APP.config.dir;
+  }
   saveLocal();
-  // Si tienen Google Sheets configurado, intentar sincronizar
-  if (APP.config.sheetId && APP.config.apiKey) {
-    const test = await gSheetRead('Stock!A1');
-    if (test !== null) {
-      setSyncStatus('ok', 'Sincronizado ✓');
-      setTimeout(() => setSyncStatus('ok', 'Conectado a Sheets'), 2000);
-      return;
-    }
-    setSyncStatus('error', 'Error de conexión');
-  } else {
+  return true;
+}
+
+async function syncData() {
+  if (!APP.config.scriptUrl) {
+    saveLocal();
     setSyncStatus('ok', 'Guardado local ✓');
     setTimeout(() => setSyncStatus('', 'Solo modo local'), 2000);
+    return;
+  }
+  setSyncStatus('sync', 'Sincronizando...');
+  saveLocal();
+  // Primero pull (traer cambios del otro usuario), luego push (subir los nuestros)
+  const pulled = await pullFromSheets();
+  if (!pulled) {
+    setSyncStatus('error', 'Error al sincronizar');
+    showToast('❌ No se pudo conectar con Google Sheets');
+    return;
+  }
+  const pushed = await pushToSheets();
+  if (pushed) {
+    setSyncStatus('ok', 'Sincronizado ✓');
+    showToast('✅ Datos sincronizados correctamente');
+    setTimeout(() => setSyncStatus('ok', 'Conectado a Sheets'), 2000);
+    // Refrescar la vista actual
+    const active = document.querySelector('.section.active');
+    if (active) onSectionLoad(active.id.replace('sec-', ''));
+  } else {
+    setSyncStatus('error', 'Error al guardar');
+    showToast('⚠️ Se leyeron datos pero no se pudieron guardar');
+  }
+}
+
+// Auto-sync al cargar si hay script configurado
+async function autoSync() {
+  if (!APP.config.scriptUrl) return;
+  setSyncStatus('sync', 'Cargando datos...');
+  const pulled = await pullFromSheets();
+  if (pulled) {
+    setSyncStatus('ok', 'Conectado a Sheets');
+    const active = document.querySelector('.section.active');
+    if (active) onSectionLoad(active.id.replace('sec-', ''));
+  } else {
+    setSyncStatus('error', 'Sin conexión a Sheets');
   }
 }
 
@@ -2673,6 +2752,7 @@ function saveCaja() {
 // ═══════════════════════════════════════════════════
 function loadConfig() {
   document.getElementById('google-client-id').value = APP.config.googleClientId || '';
+  document.getElementById('script-url').value = APP.config.scriptUrl || '';
   document.getElementById('sheet-id').value = APP.config.sheetId || '';
   document.getElementById('api-key').value = APP.config.apiKey || '';
   document.getElementById('cfg-empresa').value = APP.config.empresa || '';
@@ -2685,10 +2765,11 @@ function loadConfig() {
 
 function saveConfig() {
   APP.config.googleClientId = document.getElementById('google-client-id').value.trim();
+  APP.config.scriptUrl = document.getElementById('script-url').value.trim();
   APP.config.sheetId = document.getElementById('sheet-id').value.trim();
   APP.config.apiKey = document.getElementById('api-key').value.trim();
   saveLocal();
-  showConfigStatus('Configuración guardada. Recargá la página para activar el login con Google.', 'info');
+  showConfigStatus('Configuración guardada. Hacé clic en Sincronizar para probar.', 'info');
 }
 
 function saveEmpresa() {
@@ -2799,14 +2880,20 @@ function init() {
   populateClienteSelects();
   populateFormulaIngSelect();
 
-  if (APP.config.sheetId) {
+  if (APP.config.scriptUrl) {
     setSyncStatus('ok', 'Sheets configurado');
+  } else if (APP.config.sheetId) {
+    setSyncStatus('ok', 'Sheets (solo lectura)');
   } else {
     setSyncStatus('', 'Solo modo local');
   }
 
   document.getElementById('topActionBtn').style.display = 'none';
   renderPrecios();
+  // Auto-sync si hay script configurado
+  if (APP.config.scriptUrl) {
+    setTimeout(autoSync, 800);
+  }
 }
 
 init();
