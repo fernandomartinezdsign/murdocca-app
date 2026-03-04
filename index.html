@@ -2780,9 +2780,13 @@ function init() {
     }
   } catch(e) {}
 
-  // Inicializar Google Auth si hay client ID
-  if (APP.config.googleClientId && typeof google !== 'undefined') {
+  // Inicializar Google Auth si hay client ID, sino mostrar demo
+  if (APP.config.googleClientId) {
     setTimeout(initGoogleAuth, 500);
+  } else {
+    // Sin Client ID: mostrar botones demo automáticamente
+    document.getElementById('google-login-btn').style.display = 'none';
+    document.getElementById('demo-btns').style.display = 'flex';
   }
 
   // Set fecha default en caja
