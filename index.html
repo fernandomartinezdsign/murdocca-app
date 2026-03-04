@@ -902,6 +902,243 @@
     .grid-2, .grid-3 { grid-template-columns: 1fr; }
     .form-row, .form-row-3 { grid-template-columns: 1fr; }
   }
+
+  /* ═══════════════════════════════════════
+     MOBILE — Carbon Design System inspired
+     ═══════════════════════════════════════ */
+  @media (max-width: 768px) {
+
+    /* Hide sidebar, use bottom nav */
+    .sidebar { display: none !important; }
+    .main { margin-left: 0 !important; }
+
+    /* Topbar mobile */
+    .topbar {
+      padding: 12px 16px;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 90;
+      height: 56px;
+      display: flex;
+      align-items: center;
+    }
+
+    .page-title { font-size: 16px; flex: 1; }
+
+    .topbar-actions .btn-ghost { display: none; }
+
+    #topActionBtn {
+      padding: 6px 14px;
+      font-size: 12px;
+    }
+
+    .content {
+      padding: 72px 0 80px !important;
+    }
+
+    /* Cards mobile */
+    .card {
+      border-radius: 0;
+      border-left: none;
+      border-right: none;
+      margin-bottom: 8px;
+    }
+
+    /* Stats grid */
+    .stats-grid {
+      grid-template-columns: 1fr 1fr !important;
+      gap: 1px !important;
+      background: var(--oat);
+      margin-bottom: 8px;
+    }
+
+    .stat-card {
+      border-radius: 0;
+      border: none;
+      padding: 16px 14px;
+    }
+
+    .stat-value { font-size: 20px; }
+
+    /* Grid override */
+    .grid-2, .grid-3 { grid-template-columns: 1fr !important; gap: 8px !important; }
+
+    /* Tables mobile — card style */
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    table { font-size: 12px; }
+    th { font-size: 9px; padding: 8px 10px; }
+    td { padding: 10px 10px; }
+
+    /* Pedido cards */
+    .pedido-card {
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 12px 16px;
+      border-radius: 0;
+      border-left: none;
+      border-right: none;
+      border-bottom: 1px solid var(--oat);
+      background: var(--warm-white);
+      margin-bottom: 0;
+    }
+
+    .pedido-num { width: 30px; font-size: 10px; }
+    .pedido-cliente { font-size: 13px; }
+    .pedido-detalle { font-size: 11px; }
+
+    /* Caja saldo bar */
+    .saldo-bar { border-radius: 0; margin-bottom: 8px; }
+    .saldo-bar .amount { font-size: 22px; }
+
+    /* Forms */
+    .form-row, .form-row-3 { grid-template-columns: 1fr !important; gap: 10px; }
+
+    /* Modal */
+    .modal {
+      width: 100% !important;
+      max-width: 100% !important;
+      border-radius: 20px 20px 0 0 !important;
+      position: fixed !important;
+      bottom: 0 !important;
+      margin: 0 !important;
+      max-height: 92vh;
+    }
+
+    .modal-overlay { align-items: flex-end !important; }
+
+    /* Action row */
+    .action-row {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+      padding: 12px 16px;
+      background: var(--warm-white);
+      border-bottom: 1px solid var(--oat);
+    }
+
+    .search-input { width: 100% !important; }
+
+    /* Section content padding */
+    #sec-stock .card,
+    #sec-clientes .card,
+    #sec-costos .card,
+    #sec-formula .card,
+    #sec-facturacion .card,
+    #sec-caja .card,
+    #sec-configuracion .card,
+    #sec-configuracion .config-panel {
+      border-radius: 0;
+      border-left: none;
+      border-right: none;
+    }
+
+    /* Tabs mobile */
+    .tabs { border-radius: 0; margin: 0 0 0 0; padding: 8px 16px; overflow-x: auto; white-space: nowrap; display: flex; flex-wrap: nowrap; }
+    .tab { flex-shrink: 0; }
+
+    /* Alert */
+    .alert { border-radius: 0; border-left: none; border-right: none; }
+
+    /* Formula grid */
+    #sec-formula .grid-2 { gap: 0 !important; }
+
+    /* Login box mobile */
+    .login-box {
+      width: 92vw !important;
+      padding: 36px 24px !important;
+    }
+
+    /* Bottom navigation bar */
+    .bottom-nav {
+      display: flex !important;
+    }
+  }
+
+  /* BOTTOM NAV BAR */
+  .bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 64px;
+    background: var(--chocolate);
+    z-index: 200;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 4px;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .bn-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.15s;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .bn-item:active { background: rgba(255,255,255,0.1); }
+  .bn-item.active { background: rgba(200,146,42,0.2); }
+
+  .bn-icon { font-size: 20px; line-height: 1; }
+
+  .bn-label {
+    font-size: 9px;
+    color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  .bn-item.active .bn-label { color: var(--honey-light); }
+  .bn-item.active .bn-icon { filter: brightness(1.3); }
+
+  /* Carbon-style section dividers on mobile */
+  @media (max-width: 768px) {
+    .section-mobile-header {
+      padding: 16px 16px 8px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--bark);
+      opacity: 0.5;
+      font-weight: 600;
+      background: var(--cream);
+    }
+
+    /* Carbon-style list items */
+    .stock-mobile-item {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      background: var(--warm-white);
+      border-bottom: 1px solid var(--oat);
+      gap: 12px;
+    }
+
+    .stock-mobile-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .user-chip {
+      padding: 4px 8px 4px 4px;
+    }
+
+    .user-name { display: none; }
+  }
+
 </style>
 </head>
 <body>
@@ -1011,6 +1248,9 @@
     <div class="section active" id="sec-dashboard">
       <div id="dash-alert" class="alert alert-warning" style="display:none">
         ⚠️ <span id="dash-alert-text"></span>
+      </div>
+      <div class="alert alert-info" style="margin-bottom:16px;" id="stock-auto-info">
+        📦 <span>El stock se descuenta automáticamente cuando marcás un pedido como <strong>Entregado</strong> o <strong>Cobrado</strong>, según la fórmula de cada barrita.</span>
       </div>
 
       <div class="stats-grid" id="dashStats">
@@ -2161,9 +2401,15 @@ const TOP_ACTIONS = {
 };
 
 function showSection(id) {
+  // Handle mobile more menu trigger
+  if (id === 'more-menu') {
+    openModal('modal-more-menu');
+    return;
+  }
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('sec-' + id).classList.add('active');
+  const sec = document.getElementById('sec-' + id);
+  if (sec) sec.classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => {
     if (n.textContent.trim().toLowerCase().includes(id.toLowerCase()) ||
         (id === 'dashboard' && n.textContent.includes('Dashboard'))) {
@@ -2174,7 +2420,14 @@ function showSection(id) {
   const topBtn = document.getElementById('topActionBtn');
   if (TOP_ACTIONS[id]) { topBtn.style.display = ''; topBtn.textContent = '+ ' + TOP_ACTIONS[id]; }
   else { topBtn.style.display = 'none'; }
+  // Scroll to top on mobile
+  window.scrollTo(0, 0);
   onSectionLoad(id);
+}
+
+function setActiveNav(el) {
+  document.querySelectorAll('.bn-item').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
 }
 
 function handleTopAction() {
@@ -2613,7 +2866,7 @@ function renderPedidos() {
         <div class="pedido-detalle">${p.detalle || ''} · Entrega: ${p.fecha}</div>
       </div>
       <span class="pedido-amount">$${formatMoney(p.total)}</span>
-      <select onchange="updatePedidoEstado(${p.id}, this.value)" style="padding:4px 8px; font-size:12px; border-radius:6px; border:1px solid var(--oat); background:var(--cream);">
+      <select onchange="updatePedidoEstado(${p.id}, this.value, this)" style="padding:4px 8px; font-size:12px; border-radius:6px; border:1px solid var(--oat); background:var(--cream);">
         ${['pendiente','en preparacion','entregado','cobrado'].map(e =>
           `<option value="${e}" ${p.estado===e?'selected':''}>${e.charAt(0).toUpperCase()+e.slice(1)}</option>`
         ).join('')}
@@ -2651,9 +2904,109 @@ function savePedido() {
   renderPedidos();
 }
 
-function updatePedidoEstado(id, estado) {
+function updatePedidoEstado(id, estado, selectEl) {
   const p = APP.pedidos.find(x => x.id === id);
-  if (p) { p.estado = estado; saveLocal(); }
+  if (!p) return;
+
+  const estadoAnterior = p.estado;
+  p.estado = estado;
+
+  // AUTO-DESCUENTO DE STOCK cuando se marca como "entregado" o "cobrado"
+  const entregadoAhora = (estado === 'entregado' || estado === 'cobrado');
+  const eraEntregado = (estadoAnterior === 'entregado' || estadoAnterior === 'cobrado');
+
+  if (entregadoAhora && !eraEntregado) {
+    // Descontar stock según la fórmula
+    const descuentos = calcularDescuentoStock(p);
+    if (descuentos.length > 0) {
+      aplicarDescuentoStock(descuentos);
+      const resumen = descuentos.map(d => `${d.nombre}: -${d.cantidad} ${d.unidad}`).join(', ');
+      showToast(`📦 Stock descontado: ${resumen}`);
+    }
+    p.stockDescontado = true;
+  }
+
+  // REVERSA si se vuelve a pendiente y ya había descontado
+  if (!entregadoAhora && eraEntregado && p.stockDescontado) {
+    const descuentos = calcularDescuentoStock(p);
+    if (descuentos.length > 0) {
+      revertirDescuentoStock(descuentos);
+      showToast('↩️ Stock revertido al cambiar estado del pedido');
+    }
+    p.stockDescontado = false;
+  }
+
+  saveLocal();
+}
+
+// Calcular qué ingredientes descontar según la fórmula y el pedido
+function calcularDescuentoStock(pedido) {
+  const descuentos = [];
+  // Buscar qué variedad de barrita tiene el pedido
+  // Intentamos matchear con las fórmulas disponibles
+  const formulaKeys = Object.keys(APP.formulas);
+  if (formulaKeys.length === 0) return descuentos;
+
+  // Detectar variedad mencionada en el detalle del pedido
+  let formulaUsada = null;
+  if (pedido.detalle) {
+    const detalleLC = pedido.detalle.toLowerCase();
+    formulaUsada = formulaKeys.find(k => detalleLC.includes(k.toLowerCase()));
+  }
+  // Si no detecta, usar la primera fórmula
+  if (!formulaUsada) formulaUsada = formulaKeys[0];
+
+  const formula = APP.formulas[formulaUsada];
+  if (!formula || formula.length === 0) return descuentos;
+
+  // Intentar extraer cantidad de unidades del detalle
+  let unidades = 1;
+  if (pedido.detalle) {
+    const match = pedido.detalle.match(/(\d+)\s*(unidades?|barritas?|u\.?)?/i);
+    if (match) unidades = parseInt(match[1]);
+  }
+
+  // Calcular descuento proporcional (fórmula es por lote)
+  // Asumimos que la fórmula es para el lote estándar (ej: 50 unidades)
+  // El descuento es proporcional a las unidades del pedido
+  const loteTipo = 50; // unidades por lote estándar
+
+  formula.forEach(ing => {
+    const cantPorUnidad = parseFloat(ing.qty) / loteTipo;
+    const cantTotal = cantPorUnidad * unidades;
+    if (cantTotal > 0) {
+      descuentos.push({
+        nombre: ing.nombre,
+        cantidad: Math.round(cantTotal * 1000) / 1000,
+        unidad: ing.unidad
+      });
+    }
+  });
+
+  return descuentos;
+}
+
+function aplicarDescuentoStock(descuentos) {
+  descuentos.forEach(d => {
+    const ing = APP.stock.find(s => s.nombre === d.nombre);
+    if (ing) {
+      ing.stock = Math.max(0, parseFloat(ing.stock) - d.cantidad);
+    }
+  });
+  saveLocal();
+  renderStock();
+  renderDashboard();
+}
+
+function revertirDescuentoStock(descuentos) {
+  descuentos.forEach(d => {
+    const ing = APP.stock.find(s => s.nombre === d.nombre);
+    if (ing) {
+      ing.stock = parseFloat(ing.stock) + d.cantidad;
+    }
+  });
+  saveLocal();
+  renderStock();
 }
 
 function deletePedido(id) {
@@ -3014,5 +3367,66 @@ function init() {
 
 init();
 </script>
+
+<!-- BOTTOM NAV (mobile only) -->
+<nav class="bottom-nav" id="bottomNav">
+  <div class="bn-item active" onclick="showSection('dashboard'); setActiveNav(this)">
+    <span class="bn-icon">📊</span>
+    <span class="bn-label">Inicio</span>
+  </div>
+  <div class="bn-item" onclick="showSection('stock'); setActiveNav(this)">
+    <span class="bn-icon">📦</span>
+    <span class="bn-label">Stock</span>
+  </div>
+  <div class="bn-item" onclick="showSection('pedidos'); setActiveNav(this)">
+    <span class="bn-icon">🛒</span>
+    <span class="bn-label">Pedidos</span>
+  </div>
+  <div class="bn-item" onclick="showSection('caja'); setActiveNav(this)">
+    <span class="bn-icon">💰</span>
+    <span class="bn-label">Caja</span>
+  </div>
+  <div class="bn-item" onclick="showSection('more-menu'); setActiveNav(this)" id="bn-more">
+    <span class="bn-icon">☰</span>
+    <span class="bn-label">Más</span>
+  </div>
+</nav>
+
+<!-- MORE MENU (mobile) -->
+<div class="modal-overlay" id="modal-more-menu">
+  <div class="modal" style="width:100%;">
+    <div class="modal-header">
+      <div class="modal-title">Menú</div>
+      <button class="modal-close" onclick="closeModal('modal-more-menu')">✕</button>
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; padding-bottom:8px;">
+      <div onclick="closeModal('modal-more-menu'); showSection('formula')" style="background:var(--oat); border-radius:10px; padding:16px; text-align:center; cursor:pointer;">
+        <div style="font-size:24px; margin-bottom:6px;">🧪</div>
+        <div style="font-size:13px; font-weight:600;">Fórmula</div>
+      </div>
+      <div onclick="closeModal('modal-more-menu'); showSection('clientes')" style="background:var(--oat); border-radius:10px; padding:16px; text-align:center; cursor:pointer;">
+        <div style="font-size:24px; margin-bottom:6px;">👥</div>
+        <div style="font-size:13px; font-weight:600;">Clientes</div>
+      </div>
+      <div onclick="closeModal('modal-more-menu'); showSection('facturacion')" style="background:var(--oat); border-radius:10px; padding:16px; text-align:center; cursor:pointer;">
+        <div style="font-size:24px; margin-bottom:6px;">🧾</div>
+        <div style="font-size:13px; font-weight:600;">Facturación</div>
+      </div>
+      <div onclick="closeModal('modal-more-menu'); showSection('costos')" style="background:var(--oat); border-radius:10px; padding:16px; text-align:center; cursor:pointer;">
+        <div style="font-size:24px; margin-bottom:6px;">💡</div>
+        <div style="font-size:13px; font-weight:600;">Costos</div>
+      </div>
+      <div onclick="closeModal('modal-more-menu'); showSection('configuracion')" style="background:var(--oat); border-radius:10px; padding:16px; text-align:center; cursor:pointer;">
+        <div style="font-size:24px; margin-bottom:6px;">⚙️</div>
+        <div style="font-size:13px; font-weight:600;">Config</div>
+      </div>
+      <div onclick="closeModal('modal-more-menu'); syncData()" style="background:var(--chocolate); border-radius:10px; padding:16px; text-align:center; cursor:pointer;">
+        <div style="font-size:24px; margin-bottom:6px;">🔄</div>
+        <div style="font-size:13px; font-weight:600; color:var(--honey-light);">Sincronizar</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
