@@ -1139,6 +1139,154 @@
     .user-name { display: none; }
   }
 
+
+  /* ═══════════════════════════════════════
+     ANIMACIONES — Carbon Design System
+     ═══════════════════════════════════════ */
+
+  /* Entrada de cards */
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.96); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  @keyframes slideInRight {
+    from { opacity: 0; transform: translateX(16px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.5; }
+  }
+
+  /* Section transitions */
+  .section.active {
+    animation: fadeSlideUp 0.22s cubic-bezier(0.2, 0, 0.38, 0.9);
+  }
+
+  /* Card hover */
+  .card {
+    transition: box-shadow 0.2s ease, transform 0.15s ease;
+  }
+  .card:hover {
+    box-shadow: 0 4px 20px var(--shadow);
+  }
+
+  /* Stat cards */
+  .stat-card {
+    transition: background 0.15s ease, transform 0.15s ease;
+    cursor: default;
+  }
+  .stat-card:hover {
+    background: var(--oat);
+    transform: translateY(-2px);
+  }
+
+  /* Buttons */
+  .btn {
+    transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+  }
+  .btn:active {
+    transform: scale(0.97);
+  }
+  .btn-primary:hover {
+    filter: brightness(1.08);
+    box-shadow: 0 4px 14px rgba(200,146,42,0.3);
+  }
+
+  /* Table rows */
+  tbody tr {
+    transition: background 0.12s ease;
+  }
+
+  /* Nav items */
+  .nav-item {
+    transition: background 0.15s ease, padding-left 0.15s ease;
+  }
+
+  /* Pedido cards */
+  .pedido-card {
+    transition: background 0.15s ease, transform 0.12s ease;
+    animation: fadeSlideUp 0.2s ease;
+  }
+  .pedido-card:hover {
+    background: var(--oat);
+    transform: translateX(2px);
+  }
+
+  /* Modal */
+  .modal {
+    animation: scaleIn 0.2s cubic-bezier(0.2, 0, 0.38, 0.9);
+  }
+
+  /* Bottom nav items */
+  .bn-item {
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+  .bn-item:active {
+    transform: scale(0.92);
+  }
+
+  /* Badge */
+  .badge {
+    transition: background 0.15s ease;
+  }
+
+  /* Icon buttons */
+  .icon-btn {
+    transition: transform 0.1s ease, opacity 0.15s ease;
+  }
+  .icon-btn:hover {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+
+  /* Progress bars */
+  .progress-bar {
+    transition: width 0.6s cubic-bezier(0.2, 0, 0.38, 0.9);
+  }
+
+  /* Sync dot pulse */
+  .sync-dot.syncing {
+    animation: pulse 1s infinite;
+  }
+
+  /* Toast */
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Stock alerts */
+  .alert {
+    animation: fadeIn 0.2s ease;
+  }
+
+  /* User chip */
+  .user-chip {
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+  }
+  .user-chip:hover {
+    box-shadow: 0 2px 10px var(--shadow);
+  }
+
+  /* Input focus */
+  input:focus, select:focus, textarea:focus {
+    transform: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
 </style>
 </head>
 <body>
@@ -1297,44 +1445,32 @@
       <div class="tabs" id="formula-tabs">
         <!-- Tabs generados por JS -->
       </div>
-      <div class="grid-2">
-        <div class="card">
-          <div class="card-title">🧪 Ingredientes de la Receta</div>
-          <div id="formula-lista"></div>
-          <div style="margin-top:12px; display:flex; gap:8px;">
-            <button class="btn btn-ghost btn-sm" onclick="openModalAddIngFormula()">+ Agregar ingrediente</button>
-            <button class="btn btn-primary btn-sm" onclick="saveFormula()">💾 Guardar Receta</button>
-          </div>
+      <div class="card">
+        <div class="card-title">🧪 Ingredientes de la Receta</div>
+        <div class="alert alert-info" style="margin-bottom:14px;">
+          ℹ️ Definí los ingredientes y cantidades por lote. El costo se calcula automáticamente en <strong>Costos &amp; Precios</strong>.
         </div>
-        <div class="card">
-          <div class="card-title">📊 Costo de Producción</div>
+        <div id="formula-lista"></div>
+        <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn btn-ghost btn-sm" onclick="openModalAddIngFormula()">+ Agregar ingrediente</button>
+          <button class="btn btn-primary btn-sm" onclick="saveFormula()">💾 Guardar Receta</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🏭 Registrar Producción</div>
+        <p style="font-size:13px; color:var(--bark); opacity:0.7; margin-bottom:14px;">Registrá cuántas barritas elaboraste. El stock de ingredientes se descuenta automáticamente.</p>
+        <div class="form-row">
           <div class="form-group">
-            <label>Unidades por lote</label>
-            <input type="number" id="f-unidades" value="50" min="1" onchange="calcFormulaCost()">
+            <label>Variedad</label>
+            <select id="prod-variedad" onchange="calcProduccionStock()"></select>
           </div>
-          <div class="cost-result" style="margin-bottom:14px">
-            <div class="label">Costo por unidad</div>
-            <div class="value">$<span id="f-costo-unit">0.00</span></div>
-          </div>
-          <div style="background:var(--oat); border-radius:10px; padding:14px; font-size:12.5px;">
-            <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-              <span>Costo total lote</span>
-              <span class="font-mono" id="f-costo-total">$0.00</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-              <span>Con margen (<span id="f-margen-label">40</span>%)</span>
-              <span class="font-mono" id="f-precio-sugerido">$0.00</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; font-weight:600;">
-              <span>Precio sugerido venta</span>
-              <span class="font-mono" style="color:var(--honey-dark);" id="f-precio-final">$0.00</span>
-            </div>
-          </div>
-          <div class="form-group" style="margin-top:12px;">
-            <label>Margen de ganancia (%)</label>
-            <input type="range" id="f-margen" min="10" max="200" value="40" oninput="calcFormulaCost()" style="padding:0; border:none; background:none; box-shadow:none;">
+          <div class="form-group">
+            <label>Unidades a elaborar</label>
+            <input type="number" id="prod-unidades" value="50" min="1" oninput="calcProduccionStock()">
           </div>
         </div>
+        <div id="prod-stock-check" style="margin:12px 0;"></div>
+        <button class="btn btn-primary" onclick="registrarProduccion()">✅ Registrar Producción</button>
       </div>
     </div>
 
@@ -1366,76 +1502,113 @@
       </div>
     </div>
 
-    <!-- ═══════════════════════════════ COSTOS ═══════════════════════════════ -->
+    <!-- ═══════════════════════════════ COSTOS ══════════════════════════    <!-- ═══════════════════════════════ COSTOS & PRECIOS ═══════════════════════════════ -->
     <div class="section" id="sec-costos">
-      <div class="grid-2" style="margin-bottom:16px;">
-        <div class="card">
-          <div class="card-title">💡 Calculadora de Precio</div>
+
+      <!-- COSTO DE PRODUCCIÓN AUTOMÁTICO -->
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-title">🧮 Costo de Producción (automático)</div>
+        <p style="font-size:13px; color:var(--bark); opacity:0.7; margin-bottom:14px;">El costo se calcula sumando el precio de cada ingrediente del stock según la fórmula.</p>
+        <div class="form-row">
           <div class="form-group">
-            <label>Producto / Variedad</label>
-            <select id="calc-producto">
-              <option>Barrita Clásica</option>
-            </select>
+            <label>Variedad de barrita</label>
+            <select id="cp-variedad" onchange="calcCostoProduccion()"></select>
           </div>
           <div class="form-group">
-            <label>Costo base (por unidad)</label>
-            <input type="number" id="calc-costo" placeholder="0.00" step="0.01" oninput="calcPrecio()">
+            <label>Unidades por lote</label>
+            <input type="number" id="cp-unidades" value="50" min="1" oninput="calcCostoProduccion()">
           </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Margen (%)</label>
-              <input type="number" id="calc-margen" value="40" oninput="calcPrecio()">
-            </div>
-            <div class="form-group">
-              <label>IVA (%)</label>
-              <input type="number" id="calc-iva" value="0" oninput="calcPrecio()">
-            </div>
+        </div>
+        <div id="cp-detalle-ingredientes" style="margin:12px 0;"></div>
+        <div style="background:var(--oat); border-radius:10px; padding:16px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; text-align:center;">
+          <div>
+            <div style="font-size:11px; opacity:0.6; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">Costo lote</div>
+            <div style="font-family:'DM Mono',monospace; font-size:18px; font-weight:700; color:var(--bark);">$<span id="cp-costo-lote">0.00</span></div>
           </div>
-          <div class="cost-result" style="margin-top:8px;">
-            <div class="label">Precio de Venta Sugerido</div>
-            <div class="value">$<span id="calc-result">0.00</span></div>
+          <div>
+            <div style="font-size:11px; opacity:0.6; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">Costo unitario</div>
+            <div style="font-family:'DM Mono',monospace; font-size:18px; font-weight:700; color:var(--honey-dark);">$<span id="cp-costo-unit">0.00</span></div>
+          </div>
+          <div>
+            <div style="font-size:11px; opacity:0.6; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">Costo caja x12</div>
+            <div style="font-family:'DM Mono',monospace; font-size:18px; font-weight:700; color:var(--sage);">$<span id="cp-costo-caja">0.00</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COSTOS FIJOS -->
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
+          <span>🏢 Costos Fijos</span>
+          <button class="btn btn-primary btn-sm" onclick="openModalCostoFijo()">+ Agregar</button>
+        </div>
+        <p style="font-size:13px; color:var(--bark); opacity:0.7; margin-bottom:12px;">Alquiler, luz, gas, packaging, etc. Se suman al costo unitario.</p>
+        <div id="costos-fijos-list"></div>
+        <div style="background:var(--oat); border-radius:8px; padding:12px 16px; margin-top:12px; display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:13px; font-weight:600;">Total costos fijos por unidad</span>
+          <span style="font-family:'DM Mono',monospace; font-size:16px; font-weight:700; color:var(--terracotta);">$<span id="cp-costo-fijo-unit">0.00</span></span>
+        </div>
+      </div>
+
+      <!-- PRECIOS DE VENTA -->
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-title">💰 Precios de Venta</div>
+        <div class="alert alert-info" style="margin-bottom:14px;">
+          ℹ️ Los precios se calculan automáticamente. Solo definí los márgenes.
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+          <div class="form-group">
+            <label>Margen cliente minorista (%)</label>
+            <input type="number" id="cp-margen-cliente" value="60" min="0" oninput="calcPreciosVenta()">
+          </div>
+          <div class="form-group">
+            <label>Margen distribuidor (%)</label>
+            <input type="number" id="cp-margen-distrib" value="30" min="0" oninput="calcPreciosVenta()">
           </div>
         </div>
 
-        <div class="card">
-          <div class="card-title">📈 Precios Registrados</div>
-          <table>
-            <thead><tr><th>Producto</th><th>Costo</th><th>Precio Venta</th><th>Margen</th></tr></thead>
-            <tbody id="precios-tbody">
-              <tr><td colspan="4" style="text-align:center; opacity:0.4; padding:20px;">Sin registros</td></tr>
+        <!-- Tabla de precios -->
+        <div style="overflow-x:auto;">
+          <table style="width:100%; font-size:13px;">
+            <thead>
+              <tr>
+                <th>Formato</th>
+                <th>Costo</th>
+                <th>Cliente</th>
+                <th>Distribuidor</th>
+              </tr>
+            </thead>
+            <tbody id="precios-venta-tbody">
+              <tr><td colspan="4" style="text-align:center; opacity:0.4; padding:20px;">Completá la fórmula y el stock para ver precios</td></tr>
             </tbody>
           </table>
-          <div style="margin-top:12px;">
-            <button class="btn btn-primary btn-sm" onclick="savePrecio()">+ Guardar Precio</button>
-          </div>
+        </div>
+        <div style="margin-top:12px; display:flex; gap:8px;">
+          <button class="btn btn-primary btn-sm" onclick="guardarPrecios()">💾 Guardar Precios</button>
         </div>
       </div>
 
+      <!-- PROYECCIÓN DE STOCK -->
       <div class="card">
-        <div class="card-title">📦 Proyección de Producción</div>
-        <div class="form-row-3">
+        <div class="card-title">📈 Proyección de Producción</div>
+        <p style="font-size:13px; color:var(--bark); opacity:0.7; margin-bottom:14px;">Ingresá cuántas barritas querés hacer la próxima semana y te decimos si el stock alcanza.</p>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Variedad</label>
+            <select id="proy-variedad" onchange="calcProyeccion()"></select>
+          </div>
           <div class="form-group">
             <label>Unidades a producir</label>
-            <input type="number" id="proy-unidades" value="100" oninput="calcProyeccion()">
-          </div>
-          <div class="form-group">
-            <label>Costo unitario</label>
-            <input type="number" id="proy-costo" placeholder="0.00" oninput="calcProyeccion()">
-          </div>
-          <div class="form-group">
-            <label>Precio de venta</label>
-            <input type="number" id="proy-precio" placeholder="0.00" oninput="calcProyeccion()">
+            <input type="number" id="proy-unidades" value="400" min="1" oninput="calcProyeccion()">
           </div>
         </div>
-        <div class="stats-grid" style="margin-top:8px; margin-bottom:0;">
-          <div class="stat-card"><div class="stat-label">Costo Total</div><div class="stat-value money" id="proy-costo-total">0</div></div>
-          <div class="stat-card"><div class="stat-label">Ingresos Totales</div><div class="stat-value money" id="proy-ingreso">0</div></div>
-          <div class="stat-card"><div class="stat-label">Ganancia</div><div class="stat-value money" id="proy-ganancia">0</div></div>
-        </div>
+        <div id="proy-resultado" style="margin-top:12px;"></div>
       </div>
+
     </div>
 
-    <!-- ═══════════════════════════════ CLIENTES ═══════════════════════════════ -->
+<!-- ═══════════════════════════════ CLIENTES ═══════════════════════════════ -->
     <div class="section" id="sec-clientes">
       <div class="action-row">
         <input class="search-input" type="text" placeholder="🔍 Buscar cliente..." oninput="filterClientes(this.value)">
@@ -1865,6 +2038,38 @@
   </div>
 </div>
 
+<!-- Modal Costo Fijo -->
+<div class="modal-overlay" id="modal-costo-fijo">
+  <div class="modal" style="width:420px;">
+    <div class="modal-header">
+      <div class="modal-title">Agregar Costo Fijo</div>
+      <button class="modal-close" onclick="closeModal('modal-costo-fijo')">✕</button>
+    </div>
+    <div class="form-group">
+      <label>Descripción</label>
+      <input type="text" id="cf-desc" placeholder="Ej: Alquiler, packaging, luz...">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Monto total mensual ($)</label>
+        <input type="number" id="cf-monto" placeholder="0.00" step="0.01">
+      </div>
+      <div class="form-group">
+        <label>Barritas/mes (para prorratear)</label>
+        <input type="number" id="cf-barritas" placeholder="800">
+      </div>
+    </div>
+    <div class="alert alert-info" style="font-size:12px;">
+      💡 El costo por unidad = monto ÷ barritas por mes
+    </div>
+    <input type="hidden" id="cf-edit-id" value="">
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-costo-fijo')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveCostoFijo()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal Agregar Usuario Autorizado -->
 <div class="modal-overlay" id="modal-add-user">
   <div class="modal" style="width:420px;">
@@ -1917,6 +2122,8 @@ const APP = {
   precios: [],
   // Usuarios autorizados: [{ email, name, role: 'admin'|'empleado' }]
   authorizedUsers: [],
+  costosFijos: [],
+  preciosGuardados: { margenCliente: 60, margenDistrib: 30 },
   currentFormula: 'Barrita Clásica',
   pedidoFilter: 'todos',
   nextPedidoId: 1,
@@ -2127,6 +2334,8 @@ function saveLocal() {
       facturas: APP.facturas, caja: APP.caja, formulas: APP.formulas,
       precios: APP.precios, config: APP.config,
       authorizedUsers: APP.authorizedUsers,
+      costosFijos: APP.costosFijos,
+      preciosGuardados: APP.preciosGuardados,
       nextPedidoId: APP.nextPedidoId, nextFacturaId: APP.nextFacturaId
     };
     localStorage.setItem('murdocca_data', JSON.stringify(data));
@@ -2142,6 +2351,8 @@ function loadLocal() {
     APP.config = data.config || APP.config;
     if (data.formulas) APP.formulas = data.formulas;
     if (data.authorizedUsers) APP.authorizedUsers = data.authorizedUsers;
+    if (data.costosFijos) APP.costosFijos = data.costosFijos;
+    if (data.preciosGuardados) APP.preciosGuardados = data.preciosGuardados;
   } catch(e) { console.warn('No se pudo cargar datos locales', e); }
 }
 
@@ -2864,6 +3075,12 @@ function renderPedidos() {
       <div class="pedido-info">
         <div class="pedido-cliente">${p.cliente}</div>
         <div class="pedido-detalle">${p.detalle || ''} · Entrega: ${p.fecha}</div>
+        <div style="margin-top:4px;">
+          <span class="badge ${p.pagado ? 'badge-green' : 'badge-amber'}" style="font-size:10px; cursor:pointer;" onclick="togglePagoPedido(${p.id})">
+            ${p.pagado ? '✅ Pagado' : '⏳ Sin pagar'}
+          </span>
+          ${p.tipoPrecio ? `<span class="badge badge-blue" style="font-size:10px; margin-left:4px;">${p.tipoPrecio}</span>` : ''}
+        </div>
       </div>
       <span class="pedido-amount">$${formatMoney(p.total)}</span>
       <select onchange="updatePedidoEstado(${p.id}, this.value, this)" style="padding:4px 8px; font-size:12px; border-radius:6px; border:1px solid var(--oat); background:var(--cream);">
@@ -2888,17 +3105,36 @@ function openModalPedido() {
 function savePedido() {
   const cliente = document.getElementById('p-cliente').value;
   if (!cliente) return alert('Seleccioná un cliente');
+  const pagado = document.getElementById('p-pagado').value === '1';
+  const tipoPrecio = document.getElementById('p-tipo-precio').value;
+  // Auto-calcular total si hay precios guardados
+  let total = parseFloat(document.getElementById('p-total').value) || 0;
   const pedido = {
     id: APP.nextPedidoId++,
     cliente,
     fecha: document.getElementById('p-fecha').value,
     detalle: document.getElementById('p-detalle').value,
-    total: parseFloat(document.getElementById('p-total').value) || 0,
+    total,
     estado: document.getElementById('p-estado').value,
     notas: document.getElementById('p-notas').value,
+    tipoPrecio,
+    pagado,
+    stockDescontado: false,
     creado: today()
   };
   APP.pedidos.push(pedido);
+  // Si está pagado, registrar en caja automáticamente
+  if (pagado && total > 0) {
+    APP.caja.push({
+      tipo: 'ingreso',
+      desc: `Pago pedido #${pedido.id} — ${cliente}`,
+      monto: total,
+      categoria: 'ventas',
+      fecha: today(),
+      pedidoId: pedido.id
+    });
+    showToast(`💰 $${formatMoney(total)} registrado en Caja automáticamente ✓`);
+  }
   saveLocal();
   closeModal('modal-pedido');
   renderPedidos();
@@ -3289,7 +3525,7 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
 // ═══════════════════════════════════════════════════
 function showToast(msg) {
   const t = document.createElement('div');
-  t.style.cssText = `position:fixed;bottom:24px;right:24px;background:var(--chocolate);color:white;padding:12px 20px;border-radius:10px;font-size:13px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.3);animation:modalIn 0.2s ease;`;
+  t.style.cssText = `position:fixed;bottom:24px;right:24px;background:var(--chocolate);color:white;padding:12px 20px;border-radius:10px;font-size:13px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.3);animation:toastIn 0.25s cubic-bezier(0.2,0,0.38,0.9);`;
   t.textContent = msg;
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 2500);
@@ -3310,6 +3546,316 @@ function estadoBadge(estado) {
   const m = { pendiente: 'badge-amber', 'en preparacion': 'badge-blue', entregado: 'badge-green', cobrado: 'badge-green' };
   return m[estado] || 'badge-amber';
 }
+
+
+// ═══════════════════════════════════════════════════
+// COSTOS & PRECIOS — lógica completa
+// ═══════════════════════════════════════════════════
+
+function populateCostosSelects() {
+  const keys = Object.keys(APP.formulas);
+  const opts = keys.map(k => `<option value="${k}">${k}</option>`).join('');
+  ['cp-variedad','proy-variedad','prod-variedad'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = opts || '<option>Sin fórmulas</option>';
+  });
+}
+
+function getCostoIngredientes(variedad, unidades) {
+  const formula = APP.formulas[variedad];
+  if (!formula || formula.length === 0) return { total: 0, detalle: [] };
+  const loteTipo = 50;
+  let total = 0;
+  const detalle = [];
+  formula.forEach(ing => {
+    const stockIng = APP.stock.find(s => s.nombre === ing.nombre);
+    const costoUnit = stockIng ? parseFloat(stockIng.costo) || 0 : 0;
+    const cantPorUnidad = parseFloat(ing.qty) / loteTipo;
+    const cantTotal = cantPorUnidad * unidades;
+    const costoTotal = cantTotal * costoUnit;
+    total += costoTotal;
+    detalle.push({ nombre: ing.nombre, cant: cantTotal, unidad: ing.unidad || '', costo: costoTotal, costoUnit });
+  });
+  return { total, detalle };
+}
+
+function getCostoFijoUnit() {
+  if (!APP.costosFijos || APP.costosFijos.length === 0) return 0;
+  return APP.costosFijos.reduce((sum, cf) => {
+    const barritas = parseFloat(cf.barritas) || 800;
+    const monto = parseFloat(cf.monto) || 0;
+    return sum + (monto / barritas);
+  }, 0);
+}
+
+function calcCostoProduccion() {
+  const variedad = document.getElementById('cp-variedad')?.value;
+  const unidades = parseInt(document.getElementById('cp-unidades')?.value) || 50;
+  if (!variedad) return;
+  const { total, detalle } = getCostoIngredientes(variedad, unidades);
+  const costoUnit = unidades > 0 ? total / unidades : 0;
+  const costoCaja = costoUnit * 12;
+  document.getElementById('cp-costo-lote').textContent = formatMoney(total);
+  document.getElementById('cp-costo-unit').textContent = formatMoney(costoUnit);
+  document.getElementById('cp-costo-caja').textContent = formatMoney(costoCaja);
+  // Detalle ingredientes
+  const div = document.getElementById('cp-detalle-ingredientes');
+  if (detalle.length > 0) {
+    div.innerHTML = `<div style="background:var(--warm-white); border:1px solid var(--oat); border-radius:8px; overflow:hidden; margin-bottom:8px;">
+      <table style="width:100%; font-size:12px;">
+        <thead><tr><th>Ingrediente</th><th>Cantidad</th><th>Costo/u</th><th>Subtotal</th></tr></thead>
+        <tbody>${detalle.map(d => `
+          <tr>
+            <td>${d.nombre}</td>
+            <td>${d.cant.toFixed(3)} ${d.unidad}</td>
+            <td>$${formatMoney(d.costoUnit)}</td>
+            <td>$${formatMoney(d.costo)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  } else {
+    div.innerHTML = '<div class="alert alert-warn">⚠️ Cargá precios en el Stock para calcular costos automáticamente.</div>';
+  }
+  // Update fixed cost per unit
+  const costoFijoUnit = getCostoFijoUnit();
+  document.getElementById('cp-costo-fijo-unit').textContent = formatMoney(costoFijoUnit);
+  // Auto-update prices
+  calcPreciosVenta();
+}
+
+function calcPreciosVenta() {
+  const variedad = document.getElementById('cp-variedad')?.value;
+  const unidades = parseInt(document.getElementById('cp-unidades')?.value) || 50;
+  if (!variedad) return;
+  const { total } = getCostoIngredientes(variedad, unidades);
+  const costoUnit = unidades > 0 ? total / unidades : 0;
+  const costoFijoUnit = getCostoFijoUnit();
+  const costoTotal = costoUnit + costoFijoUnit;
+  const margenCliente = parseFloat(document.getElementById('cp-margen-cliente')?.value) || 60;
+  const margenDistrib = parseFloat(document.getElementById('cp-margen-distrib')?.value) || 30;
+  const precioClienteUnit = costoTotal * (1 + margenCliente / 100);
+  const precioDistribUnit = costoTotal * (1 + margenDistrib / 100);
+  const tbody = document.getElementById('precios-venta-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = `
+    <tr style="background:rgba(200,146,42,0.06);">
+      <td><strong>🍫 Barrita individual</strong></td>
+      <td>$${formatMoney(costoTotal)}</td>
+      <td style="color:var(--honey-dark); font-weight:700;">$${formatMoney(precioClienteUnit)}</td>
+      <td style="color:var(--sage); font-weight:700;">$${formatMoney(precioDistribUnit)}</td>
+    </tr>
+    <tr style="background:rgba(122,140,110,0.06);">
+      <td><strong>📦 Caja x12</strong></td>
+      <td>$${formatMoney(costoTotal * 12)}</td>
+      <td style="color:var(--honey-dark); font-weight:700;">$${formatMoney(precioClienteUnit * 12)}</td>
+      <td style="color:var(--sage); font-weight:700;">$${formatMoney(precioDistribUnit * 12)}</td>
+    </tr>
+  `;
+  // Save to APP for use in pedidos
+  APP.preciosGuardados = {
+    margenCliente, margenDistrib,
+    costoUnit: costoTotal,
+    precioClienteUnit, precioDistribUnit,
+    precioCajaCliente: precioClienteUnit * 12,
+    precioCajaDistrib: precioDistribUnit * 12,
+    variedad
+  };
+}
+
+function guardarPrecios() {
+  saveLocal();
+  showToast('💰 Precios guardados ✓');
+}
+
+// COSTOS FIJOS
+function openModalCostoFijo(idx) {
+  document.getElementById('cf-desc').value = '';
+  document.getElementById('cf-monto').value = '';
+  document.getElementById('cf-barritas').value = '800';
+  document.getElementById('cf-edit-id').value = '';
+  if (idx !== undefined) {
+    const cf = APP.costosFijos[idx];
+    document.getElementById('cf-desc').value = cf.desc;
+    document.getElementById('cf-monto').value = cf.monto;
+    document.getElementById('cf-barritas').value = cf.barritas;
+    document.getElementById('cf-edit-id').value = idx;
+  }
+  openModal('modal-costo-fijo');
+}
+
+function saveCostoFijo() {
+  const desc = document.getElementById('cf-desc').value.trim();
+  if (!desc) return alert('Ingresá una descripción');
+  const item = {
+    desc,
+    monto: parseFloat(document.getElementById('cf-monto').value) || 0,
+    barritas: parseFloat(document.getElementById('cf-barritas').value) || 800
+  };
+  const editId = document.getElementById('cf-edit-id').value;
+  if (editId !== '') APP.costosFijos[parseInt(editId)] = item;
+  else APP.costosFijos.push(item);
+  saveLocal();
+  closeModal('modal-costo-fijo');
+  renderCostosFijos();
+  calcCostoProduccion();
+  showToast('Costo fijo guardado ✓');
+}
+
+function renderCostosFijos() {
+  const div = document.getElementById('costos-fijos-list');
+  if (!div) return;
+  if (!APP.costosFijos || APP.costosFijos.length === 0) {
+    div.innerHTML = '<div style="font-size:13px; opacity:0.5; padding:8px 0;">Sin costos fijos cargados.</div>';
+    document.getElementById('cp-costo-fijo-unit').textContent = '0.00';
+    return;
+  }
+  div.innerHTML = APP.costosFijos.map((cf, i) => {
+    const unitCost = (parseFloat(cf.monto) / parseFloat(cf.barritas)).toFixed(4);
+    return `<div class="user-row">
+      <div class="user-row-info">
+        <div style="font-size:13.5px; font-weight:500;">${cf.desc}</div>
+        <div class="user-row-email">$${formatMoney(cf.monto)}/mes ÷ ${cf.barritas} barritas = $${unitCost}/u</div>
+      </div>
+      <button class="icon-btn" onclick="openModalCostoFijo(${i})">✏️</button>
+      <button class="icon-btn" onclick="deleteCostoFijo(${i})">🗑</button>
+    </div>`;
+  }).join('');
+}
+
+function deleteCostoFijo(i) {
+  if (!confirm('¿Eliminar este costo fijo?')) return;
+  APP.costosFijos.splice(i, 1);
+  saveLocal();
+  renderCostosFijos();
+  calcCostoProduccion();
+}
+
+// ═══════════════════════════════════════════════════
+// PROYECCIÓN DE STOCK
+// ═══════════════════════════════════════════════════
+function calcProyeccion() {
+  const variedad = document.getElementById('proy-variedad')?.value;
+  const unidades = parseInt(document.getElementById('proy-unidades')?.value) || 400;
+  const div = document.getElementById('proy-resultado');
+  if (!div || !variedad) return;
+  const { detalle } = getCostoIngredientes(variedad, unidades);
+  if (detalle.length === 0) {
+    div.innerHTML = '<div class="alert alert-warn">⚠️ Cargá la fórmula primero.</div>';
+    return;
+  }
+  let html = '<div style="display:flex; flex-direction:column; gap:8px;">';
+  let hayProblema = false;
+  detalle.forEach(d => {
+    const stockIng = APP.stock.find(s => s.nombre === d.nombre);
+    const stockActual = stockIng ? parseFloat(stockIng.stock) : 0;
+    const alcanza = stockActual >= d.cant;
+    if (!alcanza) hayProblema = true;
+    const porcentaje = d.cant > 0 ? Math.min(100, (stockActual / d.cant) * 100) : 100;
+    html += `<div style="background:var(--warm-white); border:1px solid var(--oat); border-radius:8px; padding:12px;">
+      <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+        <span style="font-size:13px; font-weight:600;">${d.nombre}</span>
+        <span class="badge ${alcanza ? 'badge-green' : 'badge-red'}" style="font-size:11px;">${alcanza ? '✅ Alcanza' : '❌ Falta'}</span>
+      </div>
+      <div style="font-size:12px; color:var(--bark); margin-bottom:6px;">
+        Necesitás: <strong>${d.cant.toFixed(3)} ${d.unidad}</strong> · Tenés: <strong>${stockActual} ${d.unidad}</strong>
+        ${!alcanza ? `· <span style="color:var(--terracotta);">Falta: ${(d.cant - stockActual).toFixed(3)} ${d.unidad}</span>` : ''}
+      </div>
+      <div style="height:6px; background:var(--oat); border-radius:3px; overflow:hidden;">
+        <div style="height:100%; width:${porcentaje}%; background:${alcanza ? 'var(--sage)' : 'var(--terracotta)'}; border-radius:3px; transition:width 0.4s;"></div>
+      </div>
+    </div>`;
+  });
+  html += '</div>';
+  if (hayProblema) {
+    html = `<div class="alert alert-warn" style="margin-bottom:12px;">⚠️ Stock insuficiente para producir ${unidades} barritas. Revisá los ingredientes marcados en rojo.</div>` + html;
+  } else {
+    html = `<div class="alert alert-tip" style="margin-bottom:12px;">✅ Tenés stock suficiente para producir ${unidades} barritas de ${variedad}.</div>` + html;
+  }
+  div.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════
+// PRODUCCIÓN — descuento de stock al elaborar
+// ═══════════════════════════════════════════════════
+function calcProduccionStock() {
+  const variedad = document.getElementById('prod-variedad')?.value;
+  const unidades = parseInt(document.getElementById('prod-unidades')?.value) || 50;
+  const div = document.getElementById('prod-stock-check');
+  if (!div || !variedad) return;
+  const { detalle } = getCostoIngredientes(variedad, unidades);
+  if (detalle.length === 0) { div.innerHTML = ''; return; }
+  let html = '<div style="font-size:12.5px; display:flex; flex-direction:column; gap:6px;">';
+  detalle.forEach(d => {
+    const stockIng = APP.stock.find(s => s.nombre === d.nombre);
+    const stockActual = stockIng ? parseFloat(stockIng.stock) : 0;
+    const alcanza = stockActual >= d.cant;
+    html += `<div style="display:flex; justify-content:space-between; padding:6px 10px; background:${alcanza ? 'rgba(122,140,110,0.1)' : 'rgba(196,101,74,0.1)'}; border-radius:6px;">
+      <span>${d.nombre}: -${d.cant.toFixed(3)} ${d.unidad}</span>
+      <span style="color:${alcanza ? 'var(--sage)' : 'var(--terracotta)'};">${alcanza ? '✅' : `❌ solo hay ${stockActual}`}</span>
+    </div>`;
+  });
+  html += '</div>';
+  div.innerHTML = html;
+}
+
+function registrarProduccion() {
+  const variedad = document.getElementById('prod-variedad')?.value;
+  const unidades = parseInt(document.getElementById('prod-unidades')?.value) || 50;
+  if (!variedad) return alert('Seleccioná una variedad');
+  const { detalle } = getCostoIngredientes(variedad, unidades);
+  // Verificar stock
+  const sinStock = detalle.filter(d => {
+    const s = APP.stock.find(x => x.nombre === d.nombre);
+    return !s || parseFloat(s.stock) < d.cant;
+  });
+  if (sinStock.length > 0) {
+    if (!confirm(`⚠️ Stock insuficiente en: ${sinStock.map(d=>d.nombre).join(', ')}. ¿Registrar igual?`)) return;
+  }
+  // Descontar stock
+  detalle.forEach(d => {
+    const ing = APP.stock.find(s => s.nombre === d.nombre);
+    if (ing) ing.stock = Math.max(0, parseFloat(ing.stock) - d.cant);
+  });
+  saveLocal();
+  renderStock();
+  renderDashboard();
+  calcProduccionStock();
+  showToast(`🏭 Producción registrada: ${unidades} ${variedad}`);
+}
+
+// ═══════════════════════════════════════════════════
+// PEDIDOS — pago automático a caja
+// ═══════════════════════════════════════════════════
+function togglePagoPedido(id) {
+  const p = APP.pedidos.find(x => x.id === id);
+  if (!p) return;
+  p.pagado = !p.pagado;
+  if (p.pagado) {
+    // Registrar automáticamente en caja
+    const yaEnCaja = APP.caja.find(m => m.pedidoId === id);
+    if (!yaEnCaja) {
+      APP.caja.push({
+        tipo: 'ingreso',
+        desc: `Pago pedido #${id} — ${p.cliente}`,
+        monto: parseFloat(p.total) || 0,
+        categoria: 'ventas',
+        fecha: today(),
+        pedidoId: id
+      });
+      showToast(`💰 $${formatMoney(p.total)} registrado en Caja ✓`);
+    }
+  } else {
+    // Revertir: eliminar de caja si existe
+    APP.caja = APP.caja.filter(m => m.pedidoId !== id);
+    showToast('↩️ Pago revertido de Caja');
+  }
+  saveLocal();
+  renderPedidos();
+}
+
+// Override savePedido to include new fields
+const _savePedidoOriginal = savePedido;
 
 // ═══════════════════════════════════════════════════
 // INIT
@@ -3358,7 +3904,7 @@ function init() {
   }
 
   document.getElementById('topActionBtn').style.display = 'none';
-  renderPrecios();
+  populateCostosSelects();
   // Auto-sync si hay script configurado
   if (APP.config.scriptUrl) {
     setTimeout(autoSync, 800);
