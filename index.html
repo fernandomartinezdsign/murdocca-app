@@ -1353,6 +1353,12 @@
     <div class="nav-item" onclick="showSection('caja')">
       <span class="nav-icon">💰</span> Caja
     </div>
+    <div class="nav-item" onclick="showSection('finanzas')">
+      <span class="nav-icon">📈</span> Finanzas
+    </div>
+    <div class="nav-item" onclick="showSection('calendario')">
+      <span class="nav-icon">📅</span> Calendario
+    </div>
     <div class="nav-section-label">Sistema</div>
     <div class="nav-item" onclick="showSection('configuracion')">
       <span class="nav-icon">⚙️</span> Configuración
@@ -1397,30 +1403,43 @@
       <div id="dash-alert" class="alert alert-warning" style="display:none">
         ⚠️ <span id="dash-alert-text"></span>
       </div>
-      <div class="alert alert-info" style="margin-bottom:16px;" id="stock-auto-info">
-        📦 <span>El stock se descuenta automáticamente cuando marcás un pedido como <strong>Entregado</strong> o <strong>Cobrado</strong>, según la fórmula de cada barrita.</span>
-      </div>
+
 
       <div class="stats-grid" id="dashStats">
         <div class="stat-card">
-          <div class="stat-label">Stock Alertas</div>
+          <div class="stat-label">⚠️ Stock Alertas</div>
           <div class="stat-value" id="ds-alertas">—</div>
-          <div class="stat-sub">ingredientes bajo mínimo</div>
+          <div class="stat-sub">bajo mínimo</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Pedidos Pendientes</div>
+          <div class="stat-label">🛒 Pedidos Pendientes</div>
           <div class="stat-value" id="ds-pedidos">—</div>
           <div class="stat-sub">por entregar</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Saldo Caja</div>
+          <div class="stat-label">💰 Saldo Caja</div>
           <div class="stat-value money" id="ds-saldo">—</div>
           <div class="stat-sub">balance actual</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Clientes</div>
+          <div class="stat-label">👥 Clientes</div>
           <div class="stat-value" id="ds-clientes">—</div>
           <div class="stat-sub">registrados</div>
+        </div>
+        <div class="stat-card" onclick="showSection('finanzas')" style="cursor:pointer;">
+          <div class="stat-label">📈 Ventas del mes</div>
+          <div class="stat-value money" id="ds-ventas-mes">—</div>
+          <div class="stat-sub">cobradas</div>
+        </div>
+        <div class="stat-card" onclick="showSection('finanzas')" style="cursor:pointer;">
+          <div class="stat-label">⏳ Deuda clientes</div>
+          <div class="stat-value money" id="ds-deuda">—</div>
+          <div class="stat-sub">sin cobrar</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">🏭 Producción mes</div>
+          <div class="stat-value" id="ds-produccion-mes">—</div>
+          <div class="stat-sub">unidades</div>
         </div>
       </div>
 
@@ -1864,6 +1883,127 @@
       </div>
     </div>
 
+
+    <!-- ═══════════════════════════════ FINANZAS ═══════════════════════════════ -->
+    <div class="section" id="sec-finanzas">
+
+      <!-- INDICADORES ECONÓMICOS EN VIVO -->
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
+          <span>🌐 Indicadores Económicos</span>
+          <button class="btn btn-ghost btn-sm" onclick="fetchIndicadores()">🔄 Actualizar</button>
+        </div>
+        <div id="indicadores-grid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-top:8px;">
+          <div class="stat-card" style="text-align:center;">
+            <div class="stat-label">💵 Dólar Oficial</div>
+            <div class="stat-value" id="ind-dolar-oficial" style="font-size:18px;">—</div>
+            <div class="stat-sub" id="ind-dolar-oficial-var"></div>
+          </div>
+          <div class="stat-card" style="text-align:center;">
+            <div class="stat-label">💙 Dólar Blue</div>
+            <div class="stat-value" id="ind-dolar-blue" style="font-size:18px;">—</div>
+            <div class="stat-sub" id="ind-dolar-blue-var"></div>
+          </div>
+          <div class="stat-card" style="text-align:center;">
+            <div class="stat-label">🏦 Dólar MEP</div>
+            <div class="stat-value" id="ind-dolar-mep" style="font-size:18px;">—</div>
+            <div class="stat-sub" id="ind-dolar-mep-var"></div>
+          </div>
+          <div class="stat-card" style="text-align:center;">
+            <div class="stat-label">📊 Inflación mensual</div>
+            <div class="stat-value" id="ind-inflacion" style="font-size:18px;">—</div>
+            <div class="stat-sub" id="ind-inflacion-fecha"></div>
+          </div>
+          <div class="stat-card" style="text-align:center;">
+            <div class="stat-label">📉 IPC Acumulado</div>
+            <div class="stat-value" id="ind-ipc" style="font-size:18px;">—</div>
+            <div class="stat-sub">año actual</div>
+          </div>
+          <div class="stat-card" style="text-align:center;">
+            <div class="stat-label">🏧 Tasa Plazo Fijo</div>
+            <div class="stat-value" id="ind-tasa" style="font-size:18px;">—</div>
+            <div class="stat-sub">TNA anual</div>
+          </div>
+        </div>
+        <div id="ind-ultima-actualizacion" style="font-size:11px; opacity:0.4; margin-top:10px; text-align:right;"></div>
+      </div>
+
+      <!-- TABS -->
+      <div class="tabs" id="fin-tabs" style="margin-bottom:0;">
+        <div class="tab active" onclick="switchFinTab('cierre',this)">📅 Cierre Mensual</div>
+        <div class="tab" onclick="switchFinTab('deudas',this)">⚠️ Deudas</div>
+        <div class="tab" onclick="switchFinTab('variacion',this)">📈 Variación Precios</div>
+        <div class="tab" onclick="switchFinTab('historial',this)">🧾 Historial Costos</div>
+      </div>
+
+      <!-- CIERRE MENSUAL -->
+      <div id="fin-tab-cierre">
+        <div class="card" style="border-radius:0 0 14px 14px;">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
+            <input type="month" id="fin-mes-selector" onchange="renderCierreMensual()"
+              style="padding:6px 12px; border-radius:8px; border:1px solid var(--oat); background:var(--cream); font-size:13px;">
+            <button class="btn btn-ghost btn-sm" onclick="exportarCierre()">📥 Exportar</button>
+          </div>
+          <div id="cierre-mensual-content">
+            <div class="loading"><div class="spinner"></div>Calculando...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DEUDAS DE CLIENTES -->
+      <div id="fin-tab-deudas" style="display:none;">
+        <div class="card" style="border-radius:0 0 14px 14px;">
+          <p style="font-size:13px; opacity:0.6; margin-bottom:14px;">Pedidos entregados o en preparación que aún no fueron cobrados.</p>
+          <div id="deudas-content"></div>
+        </div>
+      </div>
+
+      <!-- VARIACIÓN DE PRECIOS -->
+      <div id="fin-tab-variacion" style="display:none;">
+        <div class="card" style="border-radius:0 0 14px 14px;">
+          <div class="alert alert-info" style="margin-bottom:14px;">
+            💡 Cada vez que actualizás el costo de un ingrediente en Stock, se guarda un registro histórico aquí.
+          </div>
+          <div id="variacion-content"></div>
+        </div>
+      </div>
+
+      <!-- HISTORIAL DE COSTOS -->
+      <div id="fin-tab-historial" style="display:none;">
+        <div class="card" style="border-radius:0 0 14px 14px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <p style="font-size:13px; opacity:0.6; margin:0;">Historial de precios pagados por ingrediente.</p>
+            <button class="btn btn-ghost btn-sm" onclick="openModalCostoHistorial()">+ Registrar compra</button>
+          </div>
+          <div id="historial-costos-content"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════ CALENDARIO ═══════════════════════════════ -->
+    <div class="section" id="sec-calendario">
+      <div class="card" style="margin-bottom:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <button class="btn btn-ghost btn-sm" onclick="calendarioMes(-1)">‹</button>
+            <span id="cal-titulo" style="font-size:15px; font-weight:700; min-width:160px; text-align:center;"></span>
+            <button class="btn btn-ghost btn-sm" onclick="calendarioMes(1)">›</button>
+          </div>
+          <div class="tabs" style="margin:0; background:transparent;">
+            <div class="tab active" id="cal-tab-mes" onclick="setCalView('mes',this)">Mes</div>
+            <div class="tab" id="cal-tab-semana" onclick="setCalView('semana',this)">Semana</div>
+          </div>
+        </div>
+        <div id="calendario-grid"></div>
+      </div>
+
+      <!-- Pedidos del día seleccionado -->
+      <div class="card" id="cal-dia-detail" style="display:none;">
+        <div class="card-title" id="cal-dia-title">Pedidos del día</div>
+        <div id="cal-dia-list"></div>
+      </div>
+    </div>
+
     <!-- ═══════════════════════════════ CONFIGURACIÓN ═══════════════════════════════ -->
     <div class="section" id="sec-configuracion">
       <div class="config-panel">
@@ -2213,6 +2353,47 @@
   </div>
 </div>
 
+<!-- Modal Registrar Compra Ingrediente -->
+<div class="modal-overlay" id="modal-costo-historial">
+  <div class="modal" style="width:420px;">
+    <div class="modal-header">
+      <div class="modal-title">Registrar Compra</div>
+      <button class="modal-close" onclick="closeModal('modal-costo-historial')">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Ingrediente</label>
+        <select id="ch-ingrediente"></select>
+      </div>
+      <div class="form-group">
+        <label>Fecha</label>
+        <input type="date" id="ch-fecha">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Costo por unidad ($)</label>
+        <input type="number" id="ch-costo" placeholder="0.00" step="0.01" min="0">
+      </div>
+      <div class="form-group">
+        <label>Cantidad comprada</label>
+        <input type="number" id="ch-cantidad" placeholder="0" step="0.01" min="0">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Proveedor</label>
+      <input type="text" id="ch-proveedor" placeholder="Nombre del proveedor">
+    </div>
+    <div class="alert alert-info" style="font-size:12px;">
+      💡 Al guardar, se actualiza automáticamente el costo del ingrediente en Stock.
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-costo-historial')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveCostoHistorial()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal Costo Fijo -->
 <div class="modal-overlay" id="modal-costo-fijo">
   <div class="modal" style="width:420px;">
@@ -2301,7 +2482,10 @@ const APP = {
   descuentos: [],
   preciosGuardados: { margenCliente: 60, margenDistrib: 30 },
   stockBarritas: {},   // { 'Barrita Clásica': 0, 'Barrita Chocolate': 0 }
-  produccionHistorial: [], // [{ fecha, variedad, unidades, id }]
+  produccionHistorial: [],
+  costoHistorial: [],     // [{ id, fecha, ingrediente, costo, cantidad, proveedor }]
+  precioHistorial: [],    // [{ fecha, ingrediente, costoAnterior, costoNuevo }]
+  indicadoresCache: null, // { ts, data }
   currentFormula: 'Barrita Clásica',
   pedidoFilter: 'todos',
   nextPedidoId: 1,
@@ -2517,6 +2701,8 @@ function saveLocal() {
       preciosGuardados: APP.preciosGuardados,
       stockBarritas: APP.stockBarritas,
       produccionHistorial: APP.produccionHistorial,
+      costoHistorial: APP.costoHistorial,
+      precioHistorial: APP.precioHistorial,
       nextPedidoId: APP.nextPedidoId, nextFacturaId: APP.nextFacturaId
     };
     localStorage.setItem('murdocca_data', JSON.stringify(data));
@@ -2534,6 +2720,8 @@ function loadLocal() {
     if (data.authorizedUsers) APP.authorizedUsers = data.authorizedUsers;
     if (data.costosFijos) APP.costosFijos = data.costosFijos;
     if (data.descuentos) APP.descuentos = data.descuentos;
+    if (data.costoHistorial) APP.costoHistorial = data.costoHistorial;
+    if (data.precioHistorial) APP.precioHistorial = data.precioHistorial;
     if (data.preciosGuardados) APP.preciosGuardados = data.preciosGuardados;
     if (data.stockBarritas) APP.stockBarritas = data.stockBarritas;
     if (data.produccionHistorial) APP.produccionHistorial = data.produccionHistorial;
@@ -2786,7 +2974,7 @@ async function autoSync() {
 const PAGE_TITLES = {
   dashboard: 'Dashboard', formula: 'Fórmula de Producción', stock: 'Control de Stock',
   costos: 'Costos & Precios', clientes: 'Clientes', pedidos: 'Pedidos',
-  facturacion: 'Facturación', caja: 'Control de Caja', configuracion: 'Configuración'
+  facturacion: 'Facturación', caja: 'Control de Caja', finanzas: 'Finanzas', calendario: 'Calendario de Entregas', configuracion: 'Configuración'
 };
 
 const TOP_ACTIONS = {
@@ -2848,14 +3036,29 @@ function onSectionLoad(id) {
 // DASHBOARD
 // ═══════════════════════════════════════════════════
 function renderDashboard() {
-  const alertas = APP.stock.filter(s => parseFloat(s.stock) < parseFloat(s.minimo)).length;
+  const alertas = APP.stock.filter(s => parseFloat(s.stock) <= parseFloat(s.minimo)).length;
   const pendientes = APP.pedidos.filter(p => p.estado === 'pendiente').length;
-  const saldo = APP.caja.reduce((a, m) => a + (m.tipo === 'ingreso' ? parseFloat(m.monto) : -parseFloat(m.monto)), 0);
+  const saldo = APP.caja.reduce((a, m) => a + (m.tipo==='ingreso' ? parseFloat(m.monto) : -parseFloat(m.monto)), 0);
+  const mesFiltro = today().slice(0,7);
+  const ventasMes = APP.pedidos.filter(p => (p.fecha||'').startsWith(mesFiltro) && p.pagado)
+    .reduce((a,p) => a + parseFloat(p.total||0), 0);
+  const deudaTotal = APP.pedidos.filter(p => p.estado==='entregado' && !p.pagado)
+    .reduce((a,p) => a + parseFloat(p.total||0), 0);
 
   document.getElementById('ds-alertas').textContent = alertas;
   document.getElementById('ds-pedidos').textContent = pendientes;
   document.getElementById('ds-saldo').textContent = formatMoney(saldo);
   document.getElementById('ds-clientes').textContent = APP.clientes.length;
+
+  // Extra KPIs if elements exist
+  const ventasEl = document.getElementById('ds-ventas-mes');
+  if (ventasEl) ventasEl.textContent = formatMoney(ventasMes);
+  const deudaEl = document.getElementById('ds-deuda');
+  if (deudaEl) deudaEl.textContent = formatMoney(deudaTotal);
+  const prodMes = (APP.produccionHistorial||[]).filter(r => (r.fecha||'').startsWith(mesFiltro))
+    .reduce((a,r) => a+(r.unidades||0), 0);
+  const prodEl = document.getElementById('ds-produccion-mes');
+  if (prodEl) prodEl.textContent = prodMes + ' u.';
 
   // Stock crítico
   const criticos = APP.stock.filter(s => parseFloat(s.stock) <= parseFloat(s.minimo));
@@ -4620,6 +4823,603 @@ function togglePagoPedido(id) {
 // Override savePedido to include new fields
 const _savePedidoOriginal = savePedido;
 
+
+// ═══════════════════════════════════════════════════
+// INDICADORES ECONÓMICOS — APIs públicas argentinas
+// ═══════════════════════════════════════════════════
+
+async function fetchIndicadores() {
+  const ind = document.getElementById('indicadores-grid');
+  const upd = document.getElementById('ind-ultima-actualizacion');
+  if (upd) upd.textContent = '🔄 Actualizando...';
+
+  try {
+    // DolarAPI.com — cotizaciones
+    const resDolar = await fetch('https://dolarapi.com/v1/dolares');
+    const dolares = await resDolar.json();
+
+    const oficial = dolares.find(d => d.casa === 'oficial');
+    const blue    = dolares.find(d => d.casa === 'blue');
+    const mep     = dolares.find(d => d.casa === 'bolsa');
+
+    const setInd = (id, val, sub) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = val;
+      const subEl = document.getElementById(id + '-var');
+      if (subEl && sub !== undefined) subEl.textContent = sub;
+    };
+
+    if (oficial) setInd('ind-dolar-oficial', '$' + formatMoney(oficial.venta), 'Venta: $' + formatMoney(oficial.venta));
+    if (blue)    setInd('ind-dolar-blue',    '$' + formatMoney(blue.venta),    'Venta: $' + formatMoney(blue.venta));
+    if (mep)     setInd('ind-dolar-mep',     '$' + formatMoney(mep.venta),     'Venta: $' + formatMoney(mep.venta));
+
+    // BCRA API — inflación y tasa
+    try {
+      const resBcra = await fetch('https://api.bcra.gob.ar/estadisticas/v3.0/monetarias/5?limit=2', {
+        headers: { 'Accept': 'application/json' }
+      });
+      if (resBcra.ok) {
+        const bcra = await resBcra.json();
+        const last = bcra.results?.[0];
+        if (last) {
+          const el = document.getElementById('ind-inflacion');
+          if (el) el.textContent = last.valor + '%';
+          const fe = document.getElementById('ind-inflacion-fecha');
+          if (fe) fe.textContent = last.fecha?.slice(0,7) || '';
+        }
+      }
+    } catch(e) {}
+
+    // Tasa plazo fijo BCRA
+    try {
+      const resTasa = await fetch('https://api.bcra.gob.ar/estadisticas/v3.0/monetarias/7?limit=1', {
+        headers: { 'Accept': 'application/json' }
+      });
+      if (resTasa.ok) {
+        const tasaData = await resTasa.json();
+        const last = tasaData.results?.[0];
+        if (last) {
+          const el = document.getElementById('ind-tasa');
+          if (el) el.textContent = last.valor + '%';
+        }
+      }
+    } catch(e) {}
+
+    // IPC acumulado — simple: suma últimos 12 meses desde inflacion endpoint
+    try {
+      const resIpc = await fetch('https://api.bcra.gob.ar/estadisticas/v3.0/monetarias/5?limit=12', {
+        headers: { 'Accept': 'application/json' }
+      });
+      if (resIpc.ok) {
+        const ipcData = await resIpc.json();
+        const acum = (ipcData.results || []).reduce((a, r) => a * (1 + (parseFloat(r.valor)||0)/100), 1);
+        const el = document.getElementById('ind-ipc');
+        if (el) el.textContent = ((acum - 1) * 100).toFixed(1) + '%';
+      }
+    } catch(e) {}
+
+    if (upd) upd.textContent = 'Última actualización: ' + new Date().toLocaleTimeString('es-AR');
+    APP.indicadoresCache = { ts: Date.now() };
+
+  } catch(e) {
+    if (upd) upd.textContent = '⚠️ Sin conexión — mostrando últimos datos guardados';
+    // Mostrar valores de ejemplo / última caché
+    ['ind-dolar-oficial','ind-dolar-blue','ind-dolar-mep'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && el.textContent === '—') el.textContent = 'Sin datos';
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// FINANZAS — TABS
+// ═══════════════════════════════════════════════════
+function switchFinTab(tab, el) {
+  ['cierre','deudas','variacion','historial'].forEach(t => {
+    const d = document.getElementById('fin-tab-' + t);
+    if (d) d.style.display = t === tab ? '' : 'none';
+  });
+  document.querySelectorAll('#fin-tabs .tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  if (tab === 'cierre')   renderCierreMensual();
+  if (tab === 'deudas')   renderDeudas();
+  if (tab === 'variacion') renderVariacionPrecios();
+  if (tab === 'historial') renderHistorialCostos();
+}
+
+// ═══════════════════════════════════════════════════
+// CIERRE MENSUAL
+// ═══════════════════════════════════════════════════
+function renderCierreMensual() {
+  const sel = document.getElementById('fin-mes-selector');
+  if (!sel) return;
+  const mes = sel.value || today().slice(0,7);
+  if (!sel.value) sel.value = mes;
+  const div = document.getElementById('cierre-mensual-content');
+  if (!div) return;
+
+  const pedidosMes = APP.pedidos.filter(p => (p.fecha||'').startsWith(mes));
+  const cajaMes    = APP.caja.filter(m => (m.fecha||'').startsWith(mes));
+  const prodMes    = (APP.produccionHistorial||[]).filter(r => (r.fecha||'').startsWith(mes));
+
+  const ingresos  = cajaMes.filter(m => m.tipo==='ingreso').reduce((a,m) => a + parseFloat(m.monto||0), 0);
+  const egresos   = cajaMes.filter(m => m.tipo==='egreso').reduce((a,m) => a + parseFloat(m.monto||0), 0);
+  const ganancia  = ingresos - egresos;
+  const pedCobrados = pedidosMes.filter(p => p.estado==='cobrado' || p.pagado).length;
+  const unidadesProducidas = prodMes.reduce((a,r) => a + (r.unidades||0), 0);
+  const costosFijosMes = (APP.costosFijos||[]).reduce((a,cf) => a + (parseFloat(cf.monto)||0), 0);
+
+  // Ventas por variedad
+  const ventasPorVariedad = {};
+  pedidosMes.forEach(p => {
+    (p.lineas||[]).forEach(l => {
+      const key = l.variedad || 'Sin variedad';
+      if (!ventasPorVariedad[key]) ventasPorVariedad[key] = { unidades: 0, total: 0 };
+      const u = l.formato==='caja' ? l.cantidad*12 : l.cantidad;
+      ventasPorVariedad[key].unidades += u;
+      ventasPorVariedad[key].total += l.subtotal||0;
+    });
+  });
+
+  const mesLabel = new Date(mes + '-02').toLocaleDateString('es-AR', { month:'long', year:'numeric' });
+
+  div.innerHTML = `
+    <h3 style="font-size:15px; font-weight:700; margin-bottom:16px; text-transform:capitalize;">${mesLabel}</h3>
+
+    <div class="stats-grid" style="margin-bottom:16px;">
+      <div class="stat-card" style="text-align:center;">
+        <div class="stat-label">💚 Ingresos</div>
+        <div class="stat-value money" style="font-size:18px; color:var(--sage);">$${formatMoney(ingresos)}</div>
+      </div>
+      <div class="stat-card" style="text-align:center;">
+        <div class="stat-label">🔴 Egresos</div>
+        <div class="stat-value money" style="font-size:18px; color:var(--terracotta);">$${formatMoney(egresos)}</div>
+      </div>
+      <div class="stat-card" style="text-align:center;">
+        <div class="stat-label">💰 Ganancia neta</div>
+        <div class="stat-value" style="font-size:18px; color:${ganancia>=0?'var(--sage)':'var(--terracotta)'};">$${formatMoney(ganancia)}</div>
+      </div>
+      <div class="stat-card" style="text-align:center;">
+        <div class="stat-label">🏭 Unidades producidas</div>
+        <div class="stat-value" style="font-size:18px;">${unidadesProducidas}</div>
+      </div>
+      <div class="stat-card" style="text-align:center;">
+        <div class="stat-label">🛒 Pedidos cobrados</div>
+        <div class="stat-value" style="font-size:18px;">${pedCobrados}</div>
+      </div>
+      <div class="stat-card" style="text-align:center;">
+        <div class="stat-label">🏢 Costos fijos</div>
+        <div class="stat-value" style="font-size:18px; color:var(--terracotta);">$${formatMoney(costosFijosMes)}</div>
+      </div>
+    </div>
+
+    ${Object.keys(ventasPorVariedad).length > 0 ? `
+    <div style="margin-bottom:16px;">
+      <div class="card-title" style="margin-bottom:10px;">📦 Ventas por variedad</div>
+      ${Object.entries(ventasPorVariedad).map(([v,d]) => `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--oat);">
+          <span style="font-size:13px; font-weight:600;">${v}</span>
+          <div style="display:flex; gap:16px; font-size:12.5px;">
+            <span>${d.unidades} unidades</span>
+            <span class="font-mono" style="color:var(--honey-dark);">$${formatMoney(d.total)}</span>
+          </div>
+        </div>`).join('')}
+    </div>` : ''}
+
+    <div style="background:var(--oat); border-radius:10px; padding:14px 16px;">
+      <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1px; opacity:0.5; margin-bottom:8px;">Desglose caja</div>
+      ${cajaMes.slice(-10).reverse().map(m => `
+        <div style="display:flex; justify-content:space-between; font-size:12.5px; padding:4px 0; border-bottom:1px solid rgba(0,0,0,0.06);">
+          <span>${m.desc || m.categoria}</span>
+          <span style="font-family:'DM Mono',monospace; color:${m.tipo==='ingreso'?'var(--sage)':'var(--terracotta)'};">
+            ${m.tipo==='ingreso'?'+':'-'}$${formatMoney(m.monto)}
+          </span>
+        </div>`).join('')}
+    </div>
+  `;
+}
+
+function exportarCierre() {
+  const mes = document.getElementById('fin-mes-selector')?.value || today().slice(0,7);
+  const el = document.getElementById('cierre-mensual-content');
+  if (!el) return;
+  const win = window.open('', '_blank');
+  win.document.write('<html><head><title>Cierre ' + mes + '</title><style>body{font-family:sans-serif;padding:20px;}</style></head><body>');
+  win.document.write('<h2>Cierre Mensual — ' + mes + '</h2>');
+  win.document.write(el.innerHTML);
+  win.document.write('</body></html>');
+  win.print();
+}
+
+// ═══════════════════════════════════════════════════
+// DEUDAS DE CLIENTES
+// ═══════════════════════════════════════════════════
+function renderDeudas() {
+  const div = document.getElementById('deudas-content');
+  if (!div) return;
+  const deudores = APP.pedidos.filter(p =>
+    !p.pagado && (p.estado === 'entregado' || p.estado === 'preparado' || p.estado === 'en preparacion')
+  );
+  if (deudores.length === 0) {
+    div.innerHTML = '<div class="empty-state"><div class="icon">✅</div><p>Sin deudas pendientes</p></div>';
+    return;
+  }
+  // Agrupar por cliente
+  const porCliente = {};
+  deudores.forEach(p => {
+    if (!porCliente[p.cliente]) porCliente[p.cliente] = { total: 0, pedidos: [] };
+    porCliente[p.cliente].total += parseFloat(p.total||0);
+    porCliente[p.cliente].pedidos.push(p);
+  });
+  const totalDeuda = Object.values(porCliente).reduce((a,c) => a + c.total, 0);
+
+  div.innerHTML = `
+    <div style="background:rgba(196,101,74,0.1); border-radius:10px; padding:12px 16px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-size:13px; font-weight:600;">Total adeudado</span>
+      <span style="font-family:'DM Mono',monospace; font-size:20px; font-weight:700; color:var(--terracotta);">$${formatMoney(totalDeuda)}</span>
+    </div>
+    ${Object.entries(porCliente).map(([cli, data]) => `
+      <div style="margin-bottom:10px; border:1px solid var(--oat); border-radius:10px; overflow:hidden;">
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:var(--oat);">
+          <span style="font-weight:700; font-size:14px;">${cli}</span>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span class="font-mono" style="color:var(--terracotta); font-weight:700;">$${formatMoney(data.total)}</span>
+            <a href="https://wa.me/?text=Hola ${encodeURIComponent(cli)}, te recordamos que tenés ${data.pedidos.length} pedido(s) sin pagar por $${formatMoney(data.total)}." target="_blank" class="btn btn-ghost btn-sm" style="font-size:11px; padding:3px 10px;">💬 WhatsApp</a>
+          </div>
+        </div>
+        ${data.pedidos.map(p => `
+          <div style="display:flex; justify-content:space-between; padding:8px 14px; font-size:12.5px; border-top:1px solid var(--oat);">
+            <span>Pedido #${p.id} · ${p.fecha}</span>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <span class="font-mono">$${formatMoney(p.total)}</span>
+              <span class="badge ${estadoBadge(p.estado)}">${p.estado}</span>
+              <button class="btn btn-primary btn-sm" style="font-size:10px; padding:2px 8px;" onclick="marcarPagado(${p.id})">✅ Cobrado</button>
+            </div>
+          </div>`).join('')}
+      </div>`).join('')}
+  `;
+}
+
+function marcarPagado(id) {
+  const p = APP.pedidos.find(x => x.id === id);
+  if (!p) return;
+  p.pagado = true;
+  if (!APP.caja.find(m => m.pedidoId === id)) {
+    APP.caja.push({ tipo:'ingreso', desc:'Cobro pedido #'+id+' — '+p.cliente, monto:parseFloat(p.total)||0, categoria:'ventas', fecha:today(), pedidoId:id });
+  }
+  saveLocal();
+  renderDeudas();
+  showToast('✅ Pedido #' + id + ' marcado como cobrado');
+}
+
+// ═══════════════════════════════════════════════════
+// VARIACIÓN DE PRECIOS DE INGREDIENTES
+// ═══════════════════════════════════════════════════
+function renderVariacionPrecios() {
+  const div = document.getElementById('variacion-content');
+  if (!div) return;
+  const hist = APP.precioHistorial || [];
+  if (hist.length === 0) {
+    div.innerHTML = '<div class="empty-state"><div class="icon">📈</div><p>Actualizá precios en Stock para ver variaciones</p></div>';
+    return;
+  }
+  // Agrupar por ingrediente
+  const porIng = {};
+  hist.forEach(h => {
+    if (!porIng[h.ingrediente]) porIng[h.ingrediente] = [];
+    porIng[h.ingrediente].push(h);
+  });
+  div.innerHTML = Object.entries(porIng).map(([ing, registros]) => {
+    const ultimo = registros[registros.length - 1];
+    const primero = registros[0];
+    const variacion = primero.costoNuevo > 0 ?
+      ((ultimo.costoNuevo - primero.costoNuevo) / primero.costoNuevo * 100).toFixed(1) : 0;
+    const color = variacion > 0 ? 'var(--terracotta)' : 'var(--sage)';
+    return `
+      <div style="margin-bottom:10px; border:1px solid var(--oat); border-radius:10px; overflow:hidden;">
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:var(--oat);">
+          <span style="font-weight:700; font-size:14px;">${ing}</span>
+          <span style="font-size:13px; font-weight:700; color:${color};">${variacion > 0 ? '▲' : '▼'} ${Math.abs(variacion)}% desde inicio</span>
+        </div>
+        ${registros.slice(-5).reverse().map((r,i) => {
+          const diff = r.costoAnterior > 0 ? ((r.costoNuevo - r.costoAnterior)/r.costoAnterior*100).toFixed(1) : null;
+          return `<div style="display:flex; justify-content:space-between; padding:7px 14px; font-size:12.5px; border-top:1px solid var(--oat);">
+            <span>${r.fecha}</span>
+            <div style="display:flex; gap:12px; align-items:center;">
+              <span class="font-mono">$${formatMoney(r.costoAnterior)} → $${formatMoney(r.costoNuevo)}</span>
+              ${diff !== null ? `<span style="font-size:11px; color:${parseFloat(diff)>0?'var(--terracotta)':'var(--sage)'};">${parseFloat(diff)>0?'▲':'▼'}${Math.abs(diff)}%</span>` : ''}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+  }).join('');
+}
+
+// Hook into saveStock to record price history
+const _saveStockOriginal = typeof saveStock === 'function' ? saveStock : null;
+
+function registrarVariacionPrecio(nombre, costoAnterior, costoNuevo) {
+  if (Math.abs(costoNuevo - costoAnterior) < 0.001) return;
+  if (!APP.precioHistorial) APP.precioHistorial = [];
+  APP.precioHistorial.push({
+    fecha: today(),
+    ingrediente: nombre,
+    costoAnterior: parseFloat(costoAnterior) || 0,
+    costoNuevo: parseFloat(costoNuevo) || 0
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// HISTORIAL DE COSTOS / COMPRAS
+// ═══════════════════════════════════════════════════
+function openModalCostoHistorial() {
+  const sel = document.getElementById('ch-ingrediente');
+  if (sel) {
+    sel.innerHTML = APP.stock.map(s => `<option value="${s.nombre}">${s.nombre}</option>`).join('');
+  }
+  const fechaEl = document.getElementById('ch-fecha');
+  if (fechaEl) fechaEl.value = today();
+  document.getElementById('ch-costo').value = '';
+  document.getElementById('ch-cantidad').value = '';
+  document.getElementById('ch-proveedor').value = '';
+  openModal('modal-costo-historial');
+}
+
+function saveCostoHistorial() {
+  const ing = document.getElementById('ch-ingrediente').value;
+  const costo = parseFloat(document.getElementById('ch-costo').value) || 0;
+  if (!ing || costo <= 0) return alert('Completá ingrediente y costo');
+  const cantidad = parseFloat(document.getElementById('ch-cantidad').value) || 0;
+  const reg = {
+    id: Date.now(),
+    fecha: document.getElementById('ch-fecha').value,
+    ingrediente: ing,
+    costo,
+    cantidad,
+    proveedor: document.getElementById('ch-proveedor').value
+  };
+  if (!APP.costoHistorial) APP.costoHistorial = [];
+  APP.costoHistorial.unshift(reg);
+  // Actualizar costo en stock + registrar variación
+  const s = APP.stock.find(x => x.nombre === ing);
+  if (s) {
+    registrarVariacionPrecio(ing, parseFloat(s.costo)||0, costo);
+    s.costo = costo;
+    if (cantidad > 0) s.stock = parseFloat(s.stock||0) + cantidad;
+  }
+  saveLocal();
+  closeModal('modal-costo-historial');
+  renderHistorialCostos();
+  renderStock();
+  showToast('📦 Compra registrada y precio actualizado ✓');
+}
+
+function renderHistorialCostos() {
+  const div = document.getElementById('historial-costos-content');
+  if (!div) return;
+  const hist = APP.costoHistorial || [];
+  if (hist.length === 0) {
+    div.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>Sin compras registradas aún</p></div>';
+    return;
+  }
+  div.innerHTML = `
+    <div style="overflow-x:auto;">
+      <table style="width:100%; font-size:13px;">
+        <thead>
+          <tr>
+            <th>Fecha</th><th>Ingrediente</th><th>Costo/u</th><th>Cantidad</th><th>Total</th><th>Proveedor</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${hist.slice(0,50).map(r => `
+            <tr>
+              <td>${r.fecha}</td>
+              <td style="font-weight:600;">${r.ingrediente}</td>
+              <td class="font-mono">$${formatMoney(r.costo)}</td>
+              <td>${r.cantidad || '—'}</td>
+              <td class="font-mono">$${formatMoney((r.costo||0)*(r.cantidad||1))}</td>
+              <td style="opacity:0.7;">${r.proveedor||'—'}</td>
+              <td><button class="icon-btn" onclick="deleteCostoHistorial(${r.id})">🗑</button></td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function deleteCostoHistorial(id) {
+  if (!confirm('¿Eliminar este registro?')) return;
+  APP.costoHistorial = (APP.costoHistorial||[]).filter(r => r.id !== id);
+  saveLocal();
+  renderHistorialCostos();
+}
+
+// ═══════════════════════════════════════════════════
+// CALENDARIO DE ENTREGAS
+// ═══════════════════════════════════════════════════
+let calDate = new Date();
+let calView = 'mes';
+
+function setCalView(view, el) {
+  calView = view;
+  document.querySelectorAll('#cal-tab-mes, #cal-tab-semana').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderCalendario();
+}
+
+function calendarioMes(delta) {
+  calDate = new Date(calDate.getFullYear(), calDate.getMonth() + delta, 1);
+  renderCalendario();
+}
+
+function renderCalendario() {
+  const grid = document.getElementById('calendario-grid');
+  const titulo = document.getElementById('cal-titulo');
+  if (!grid) return;
+
+  const year = calDate.getFullYear();
+  const month = calDate.getMonth();
+
+  titulo.textContent = new Date(year, month, 1).toLocaleDateString('es-AR', { month:'long', year:'numeric' });
+
+  if (calView === 'semana') {
+    renderCalendarioSemana(grid, year, month);
+  } else {
+    renderCalendarioMes(grid, year, month);
+  }
+}
+
+function renderCalendarioMes(grid, year, month) {
+  const primerDia = new Date(year, month, 1).getDay();
+  const diasMes = new Date(year, month + 1, 0).getDate();
+  const offset = primerDia === 0 ? 6 : primerDia - 1; // lunes primero
+
+  // Agrupar pedidos por fecha
+  const pedidosPorFecha = {};
+  APP.pedidos.forEach(p => {
+    const f = p.fecha;
+    if (!f) return;
+    if (!pedidosPorFecha[f]) pedidosPorFecha[f] = [];
+    pedidosPorFecha[f].push(p);
+  });
+
+  const hoy = today();
+  const dias = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+
+  let html = `<div style="display:grid; grid-template-columns:repeat(7,1fr); gap:2px; margin-bottom:2px;">
+    ${dias.map(d => `<div style="text-align:center; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; opacity:0.4; padding:4px;">${d}</div>`).join('')}
+  </div>
+  <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:2px;">`;
+
+  // Empty cells before first day
+  for (let i = 0; i < offset; i++) {
+    html += `<div style="min-height:60px; background:transparent;"></div>`;
+  }
+
+  for (let d = 1; d <= diasMes; d++) {
+    const fechaStr = year + '-' + String(month+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    const pedidos = pedidosPorFecha[fechaStr] || [];
+    const esHoy = fechaStr === hoy;
+    const tienePed = pedidos.length > 0;
+
+    html += `<div onclick="mostrarDiaDetalle('${fechaStr}')" style="
+      min-height:60px; padding:4px 6px; border-radius:6px; cursor:${tienePed?'pointer':'default'};
+      background:${esHoy?'var(--honey-light)':tienePed?'rgba(200,146,42,0.08)':'var(--warm-white)'};
+      border:1.5px solid ${esHoy?'var(--honey-dark)':tienePed?'var(--honey-light)':'var(--oat)'};
+      transition:background 0.15s;
+    " onmouseover="if(${tienePed}) this.style.background='var(--oat)'" onmouseout="this.style.background='${esHoy?'var(--honey-light)':tienePed?'rgba(200,146,42,0.08)':'var(--warm-white)'}'">
+      <div style="font-size:12px; font-weight:${esHoy?'800':'500'}; color:${esHoy?'var(--chocolate)':'inherit'};">${d}</div>
+      ${pedidos.slice(0,3).map(p =>
+        `<div style="font-size:9px; background:${estadoColor(p.estado)}; color:white; border-radius:3px; padding:1px 4px; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${p.cliente}</div>`
+      ).join('')}
+      ${pedidos.length > 3 ? `<div style="font-size:9px; opacity:0.5; margin-top:2px;">+${pedidos.length-3} más</div>` : ''}
+    </div>`;
+  }
+  html += '</div>';
+  grid.innerHTML = html;
+}
+
+function renderCalendarioSemana(grid, year, month) {
+  // Find start of current week (Monday)
+  const hoyDate = new Date();
+  const startOfWeek = new Date(hoyDate);
+  const day = startOfWeek.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  startOfWeek.setDate(startOfWeek.getDate() + diff);
+
+  const pedidosPorFecha = {};
+  APP.pedidos.forEach(p => {
+    if (!p.fecha) return;
+    if (!pedidosPorFecha[p.fecha]) pedidosPorFecha[p.fecha] = [];
+    pedidosPorFecha[p.fecha].push(p);
+  });
+
+  const dias = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+  const hoy = today();
+  let html = '<div style="display:grid; grid-template-columns:repeat(7,1fr); gap:6px;">';
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(startOfWeek);
+    d.setDate(d.getDate() + i);
+    const fechaStr = d.toISOString().slice(0,10);
+    const pedidos = pedidosPorFecha[fechaStr] || [];
+    const esHoy = fechaStr === hoy;
+
+    html += `<div style="border-radius:10px; border:1.5px solid ${esHoy?'var(--honey-dark)':'var(--oat)'}; padding:10px; background:${esHoy?'rgba(200,146,42,0.08)':'var(--warm-white)'}; min-height:120px;">
+      <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; opacity:${esHoy?'1':'0.5'}; margin-bottom:6px;">${dias[i]} ${d.getDate()}</div>
+      ${pedidos.map(p =>
+        `<div onclick="mostrarDiaDetalle('${fechaStr}')" style="font-size:11px; background:${estadoColor(p.estado)}; color:white; border-radius:4px; padding:3px 6px; margin-bottom:4px; cursor:pointer; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+          ${p.cliente} · $${formatMoney(p.total)}
+        </div>`
+      ).join('')}
+      ${pedidos.length === 0 ? '<div style="font-size:11px; opacity:0.3;">—</div>' : ''}
+    </div>`;
+  }
+  html += '</div>';
+  grid.innerHTML = html;
+}
+
+function mostrarDiaDetalle(fecha) {
+  const pedidos = APP.pedidos.filter(p => p.fecha === fecha);
+  const card = document.getElementById('cal-dia-detail');
+  const title = document.getElementById('cal-dia-title');
+  const list = document.getElementById('cal-dia-list');
+  if (!card || !list) return;
+
+  if (pedidos.length === 0) { card.style.display = 'none'; return; }
+
+  const fechaLabel = new Date(fecha + 'T12:00').toLocaleDateString('es-AR', { weekday:'long', day:'numeric', month:'long' });
+  title.textContent = '📅 ' + fechaLabel.charAt(0).toUpperCase() + fechaLabel.slice(1);
+  list.innerHTML = pedidos.map(p => `
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--oat);">
+      <div>
+        <div style="font-size:13.5px; font-weight:600;">${p.cliente}</div>
+        <div style="font-size:11.5px; opacity:0.6;">${(p.lineas||[]).map(l => l.variedad + ' ' + (l.formato==='caja'?'x'+l.cantidad+' cajas':l.cantidad+' u.')).join(', ') || p.detalle || ''}</div>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+        <span class="font-mono" style="font-size:14px; font-weight:700; color:var(--honey-dark);">$${formatMoney(p.total)}</span>
+        <span class="badge ${estadoBadge(p.estado)}">${p.estado}</span>
+      </div>
+    </div>`).join('');
+  card.style.display = '';
+  card.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+function estadoColor(estado) {
+  const map = {
+    'pendiente':'#C89228', 'en preparacion':'#4A7FC1', 'preparado':'#7A8C6E',
+    'entregado':'#6E6E6E', 'cobrado':'#3D5A34'
+  };
+  return map[estado] || '#888';
+}
+
+// ═══════════════════════════════════════════════════
+// DASHBOARD MEJORADO — KPIs + alertas
+// ═══════════════════════════════════════════════════
+function renderDashboardAlertas() {
+  const alertEl = document.getElementById('dash-alert');
+  const alertText = document.getElementById('dash-alert-text');
+  if (!alertEl) return;
+
+  const alertas = [];
+  // Stock crítico
+  const criticos = APP.stock.filter(s => parseFloat(s.stock) <= parseFloat(s.minimo));
+  if (criticos.length > 0) alertas.push(`⚠️ ${criticos.length} ingrediente(s) bajo el mínimo`);
+  // Pedidos sin cobrar entregados
+  const sinCobrar = APP.pedidos.filter(p => p.estado === 'entregado' && !p.pagado);
+  if (sinCobrar.length > 0) alertas.push(`💰 ${sinCobrar.length} pedido(s) entregado(s) sin cobrar`);
+  // Pedidos pendientes con entrega hoy o pasada
+  const vencidos = APP.pedidos.filter(p => p.estado === 'pendiente' && p.fecha <= today());
+  if (vencidos.length > 0) alertas.push(`🚨 ${vencidos.length} pedido(s) pendiente(s) con fecha vencida`);
+
+  if (alertas.length > 0) {
+    alertEl.style.display = '';
+    alertText.innerHTML = alertas.join(' &nbsp;|&nbsp; ');
+  } else {
+    alertEl.style.display = 'none';
+  }
+}
+
+
 // ═══════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════
@@ -4695,6 +5495,10 @@ init();
     <span class="bn-icon">💰</span>
     <span class="bn-label">Caja</span>
   </div>
+  <div class="bn-item" onclick="showSection('finanzas'); setActiveNav(this)">
+    <span class="bn-icon">📈</span>
+    <span class="bn-label">Finanzas</span>
+  </div>
   <div class="bn-item" onclick="showSection('more-menu'); setActiveNav(this)" id="bn-more">
     <span class="bn-icon">☰</span>
     <span class="bn-label">Más</span>
@@ -4728,6 +5532,10 @@ init();
       <div onclick="closeModal('modal-more-menu'); showSection('configuracion')" style="background:var(--oat); border-radius:10px; padding:16px; text-align:center; cursor:pointer;">
         <div style="font-size:24px; margin-bottom:6px;">⚙️</div>
         <div style="font-size:13px; font-weight:600;">Config</div>
+      </div>
+      <div onclick="closeModal('modal-more-menu'); showSection('calendario')" style="background:var(--oat); border-radius:10px; padding:16px; text-align:center; cursor:pointer;">
+        <div style="font-size:24px; margin-bottom:6px;">📅</div>
+        <div style="font-size:13px; font-weight:600;">Calendario</div>
       </div>
       <div onclick="closeModal('modal-more-menu'); syncData()" style="background:var(--chocolate); border-radius:10px; padding:16px; text-align:center; cursor:pointer;">
         <div style="font-size:24px; margin-bottom:6px;">🔄</div>
