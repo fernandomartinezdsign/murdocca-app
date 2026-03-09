@@ -1608,41 +1608,75 @@
       <div class="card" style="margin-bottom:14px;">
         <div class="card-title">💰 Precios de Venta</div>
         <div class="alert alert-info" style="margin-bottom:14px;">
-          ℹ️ Los precios se calculan automáticamente según la fórmula y el costo del stock.
+          ℹ️ El costo se calcula automáticamente. Podés ajustar márgenes o escribir el precio final directamente.
         </div>
-        <div class="form-group" style="margin-bottom:12px;">
-          <label>Variedad a calcular</label>
-          <select id="cp-variedad-precio" onchange="document.getElementById('cp-variedad').value=this.value; calcCostoProduccion()">
-          </select>
-        </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
-          <div class="form-group">
-            <label>Margen cliente minorista (%)</label>
+
+        <!-- Controles -->
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px; margin-bottom:16px; align-items:end;">
+          <div class="form-group" style="margin:0;">
+            <label>Margen minorista (%)</label>
             <input type="number" id="cp-margen-cliente" value="60" min="0" oninput="calcPreciosVenta()">
           </div>
-          <div class="form-group">
+          <div class="form-group" style="margin:0;">
             <label>Margen distribuidor (%)</label>
             <input type="number" id="cp-margen-distrib" value="30" min="0" oninput="calcPreciosVenta()">
           </div>
+          <div class="form-group" style="margin:0;">
+            <label>Reposición (%)</label>
+            <input type="number" id="cp-margen-repo" value="1.7" min="0" step="0.1" oninput="calcPreciosVenta()" title="% de costo para reposición de ingredientes">
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label>IVA (%)</label>
+            <input type="number" id="cp-iva" value="0" min="0" oninput="calcPreciosVenta()">
+          </div>
         </div>
 
-        <!-- Tabla de precios -->
+        <!-- Tabla de precios estilo Excel -->
         <div style="overflow-x:auto;">
-          <table style="width:100%; font-size:13px;">
+          <table id="tabla-precios-venta" style="width:100%; font-size:12.5px; border-collapse:collapse;">
             <thead>
-              <tr>
-                <th>Formato</th>
-                <th>Costo</th>
-                <th>Cliente</th>
-                <th>Distribuidor</th>
+              <tr style="background:var(--chocolate); color:white;">
+                <th style="padding:8px 12px; text-align:left; border-radius:8px 0 0 0;">Variedad</th>
+                <th style="padding:8px 12px; text-align:right;">Costo u.</th>
+                <th style="padding:8px 12px; text-align:right;">Reposición</th>
+                <th style="padding:8px 12px; text-align:right;">Inversión</th>
+                <th style="padding:8px 12px; text-align:right;">Ganancia</th>
+                <th style="padding:8px 12px; text-align:right; background:rgba(200,146,42,0.4);">P. Final u.</th>
+                <th style="padding:8px 12px; text-align:right; background:rgba(122,140,110,0.4);">P. Final caja</th>
+                <th style="padding:8px 12px; text-align:right; border-radius:0 8px 0 0;">Precio distrib.</th>
               </tr>
             </thead>
             <tbody id="precios-venta-tbody">
-              <tr><td colspan="4" style="text-align:center; opacity:0.4; padding:20px;">Completá la fórmula y el stock para ver precios</td></tr>
+              <tr><td colspan="8" style="text-align:center; opacity:0.4; padding:20px;">Completá la fórmula y el stock para ver precios</td></tr>
             </tbody>
           </table>
         </div>
-        <div style="margin-top:12px; display:flex; gap:8px;">
+
+        <!-- Tabla cantidades (como en el Excel original) -->
+        <div style="margin-top:16px;">
+          <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; opacity:0.5; margin-bottom:8px;">Simulador por volumen de compra</div>
+          <div style="overflow-x:auto;">
+            <table id="tabla-simulador" style="width:100%; font-size:12px; border-collapse:collapse;">
+              <thead>
+                <tr style="background:var(--oat);">
+                  <th style="padding:7px 12px; text-align:left;">Variedad</th>
+                  <th style="padding:7px 12px; text-align:right;">Cant. (u.)</th>
+                  <th style="padding:7px 12px; text-align:right;">Inversión total</th>
+                  <th style="padding:7px 12px; text-align:right;">Ganancia</th>
+                  <th style="padding:7px 12px; text-align:right;">P. Final u.</th>
+                  <th style="padding:7px 12px; text-align:right;">Total caja</th>
+                  <th style="padding:7px 12px; text-align:right;">Gan. x caja</th>
+                </tr>
+              </thead>
+              <tbody id="simulador-tbody"></tbody>
+            </table>
+          </div>
+          <div style="font-size:12px; opacity:0.5; margin-top:8px;">
+            💡 Editá las cantidades directamente en la tabla para simular distintos volúmenes.
+          </div>
+        </div>
+
+        <div style="margin-top:14px; display:flex; gap:8px; flex-wrap:wrap;">
           <button class="btn btn-primary btn-sm" onclick="guardarPrecios()">💾 Guardar Precios</button>
         </div>
       </div>
@@ -2286,13 +2320,28 @@
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label>Cantidad por barrita individual</label>
-        <input type="number" id="fi-qty" placeholder="0.000" min="0" step="0.0001">
+        <label>Cantidad por barrita</label>
+        <input type="number" id="fi-qty" placeholder="0.000" min="0" step="0.001" oninput="updateFormulaConversion()">
       </div>
       <div class="form-group">
-        <label>Unidad</label>
-        <input type="text" id="fi-unit-display" readonly style="background:var(--oat);">
+        <label>Unidad que usás</label>
+        <select id="fi-unit-input" onchange="updateFormulaConversion()">
+          <option value="kg">kg</option>
+          <option value="g">g (gramos)</option>
+          <option value="mg">mg (miligramos)</option>
+          <option value="litros">litros</option>
+          <option value="ml">ml</option>
+          <option value="unidades">unidades</option>
+          <option value="paquetes">paquetes</option>
+        </select>
       </div>
+    </div>
+    <div id="fi-conversion-info" style="display:none; background:var(--oat); border-radius:8px; padding:10px 14px; font-size:12.5px; margin-bottom:4px;">
+      <span id="fi-conversion-text"></span>
+    </div>
+    <div class="form-group" style="margin-top:2px;">
+      <label style="font-size:11px; opacity:0.6;">Unidad del stock (referencia)</label>
+      <input type="text" id="fi-unit-display" readonly style="background:var(--cream); font-size:12px; opacity:0.7;">
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-formula-ing')">Cancelar</button>
@@ -3214,17 +3263,22 @@ function renderFormulaList() {
   }
   lista.innerHTML = ings.map((fi, i) => {
     const stockItem = APP.stock.find(s => s.nombre === fi.nombre);
-    const costUnit = stockItem ? parseFloat(stockItem.costo) : 0;
+    const costUnit  = stockItem ? parseFloat(stockItem.costo) : 0;
     const totalCost = costUnit * parseFloat(fi.qty);
+    // Show original unit if different from stock unit
+    const unitLabel = fi.qtyOriginal && fi.unidadOriginal && fi.unidadOriginal !== fi.unidad
+      ? `${fi.qty} ${fi.unidad} <span style="opacity:0.45; font-size:10px;">(=${fi.qtyOriginal} ${fi.unidadOriginal})</span>`
+      : `${fi.qty} ${fi.unidad}`;
     return `<div class="formula-ingredient">
       <span class="fi-name">${fi.nombre}</span>
-      <input class="fi-qty" type="number" value="${fi.qty}" min="0" step="0.001" onchange="updateFormulaQty(${i}, this.value)">
-      <span class="fi-unit">${fi.unidad}</span>
+      <input class="fi-qty" type="number" value="${fi.qty}" min="0" step="0.0001" onchange="updateFormulaQty(${i}, this.value)">
+      <span class="fi-unit" style="font-size:11.5px;">${fi.unidad}</span>
       <span class="fi-cost">$${formatMoney(totalCost)}</span>
       <button class="icon-btn" onclick="removeFormulaIng(${i})">✕</button>
     </div>`;
   }).join('');
 }
+
 
 function updateFormulaQty(i, val) {
   APP.formulas[APP.currentFormula][i].qty = parseFloat(val) || 0;
@@ -3264,20 +3318,50 @@ function openModalAddIngFormula() {
   document.getElementById('fi-ing').value = '';
   document.getElementById('fi-qty').value = '';
   document.getElementById('fi-unit-display').value = '';
+  document.getElementById('fi-unit-input').value = 'kg';
+  const infoDiv = document.getElementById('fi-conversion-info');
+  if (infoDiv) infoDiv.style.display = 'none';
   document.getElementById('fi-ing').onchange = function() {
     const s = APP.stock.find(x => x.nombre === this.value);
-    document.getElementById('fi-unit-display').value = s ? s.unidad : '';
+    const unitStock = s ? (s.unidad || 'kg') : 'kg';
+    document.getElementById('fi-unit-display').value = unitStock;
+    // Auto-set unit selector to match stock unit
+    const unitSel = document.getElementById('fi-unit-input');
+    if (unitSel) unitSel.value = unitStock;
+    updateFormulaConversion();
   };
   openModal('modal-formula-ing');
 }
 
 function addIngToFormula() {
-  const nombre = document.getElementById('fi-ing').value;
-  const qty = parseFloat(document.getElementById('fi-qty').value) || 0;
+  const nombre   = document.getElementById('fi-ing').value;
+  const qtyRaw   = parseFloat(document.getElementById('fi-qty').value) || 0;
+  const unitInput = document.getElementById('fi-unit-input')?.value || 'kg';
   if (!nombre) return alert('Seleccioná un ingrediente');
+  if (qtyRaw <= 0) return alert('Ingresá una cantidad mayor a 0');
   const s = APP.stock.find(x => x.nombre === nombre);
+  const unitStock = s ? (s.unidad || 'kg') : unitInput;
+  // Convert to stock unit
+  let qtySaved = qtyRaw;
+  let unidadSaved = unitInput;
+  if (unitInput !== unitStock) {
+    const { qty: qtyConv, possible } = convertUnit(qtyRaw, unitInput, unitStock);
+    if (possible) {
+      qtySaved = parseFloat(qtyConv.toFixed(8));
+      unidadSaved = unitStock;
+    }
+    // If not convertible, save as-is with original unit
+  }
   if (!APP.formulas[APP.currentFormula]) APP.formulas[APP.currentFormula] = [];
-  APP.formulas[APP.currentFormula].push({ nombre, qty, unidad: s ? s.unidad : '' });
+  // Check if already exists — update instead of duplicate
+  const existing = APP.formulas[APP.currentFormula].findIndex(x => x.nombre === nombre);
+  const entry = { nombre, qty: qtySaved, unidad: unidadSaved, qtyOriginal: qtyRaw, unidadOriginal: unitInput };
+  if (existing >= 0) {
+    if (!confirm(nombre + ' ya está en la receta. ¿Reemplazar?')) return;
+    APP.formulas[APP.currentFormula][existing] = entry;
+  } else {
+    APP.formulas[APP.currentFormula].push(entry);
+  }
   closeModal('modal-formula-ing');
   renderFormulaList();
   calcFormulaCost();
@@ -4215,8 +4299,11 @@ function loadCaja() {
     div.innerHTML = '<div class="empty-state"><div class="icon">💰</div><p>Sin movimientos</p></div>';
     return;
   }
-  div.innerHTML = movs.map(m => `
-    <div class="caja-row">
+  div.innerHTML = movs.map((m, idx) => {
+    // Find real index in APP.caja for deletion
+    const realIdx = APP.caja.indexOf(m) !== -1 ? APP.caja.indexOf(m) : APP.caja.findIndex(x => x === m);
+    return `
+    <div class="caja-row" style="position:relative;">
       <div class="caja-type ${m.tipo === 'ingreso' ? 'caja-ingreso' : 'caja-egreso'}">${m.tipo === 'ingreso' ? '↑' : '↓'}</div>
       <div class="caja-desc">
         <div>${m.desc}</div>
@@ -4224,7 +4311,24 @@ function loadCaja() {
       </div>
       <div class="caja-amount ${m.tipo === 'ingreso' ? 'pos' : 'neg'}">${m.tipo === 'ingreso' ? '+' : '-'}$${formatMoney(m.monto)}</div>
       <div class="caja-date">${m.fecha}</div>
-    </div>`).join('');
+      <button class="icon-btn" onclick="deleteMovimientoCaja(${realIdx})" title="Eliminar movimiento"
+        style="opacity:0.4; font-size:13px; margin-left:6px; transition:opacity 0.15s;"
+        onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.4'">🗑</button>
+    </div>`;
+  }).join('');
+}
+
+function deleteMovimientoCaja(idx) {
+  const m = APP.caja[idx];
+  if (!m) return;
+  const label = m.desc || 'este movimiento';
+  if (!confirm('¿Eliminar "' + label + '" de $' + formatMoney(m.monto) + '?')) return;
+  APP.caja.splice(idx, 1);
+  saveLocal();
+  loadCaja();
+  updateSaldo();
+  renderDashboard();
+  showToast('🗑 Movimiento eliminado');
 }
 
 function saveCaja() {
@@ -4602,54 +4706,112 @@ function calcCostoProduccion() {
 }
 
 function calcPreciosVenta() {
-  const variedad = document.getElementById('cp-variedad')?.value;
   const unidades = parseInt(document.getElementById('cp-unidades')?.value) || 50;
-  if (!variedad) return;
-  const { total } = getCostoIngredientes(variedad, unidades);
-  const costoUnit = unidades > 0 ? total / unidades : 0;
   const costoFijoUnit = getCostoFijoUnit();
-  const costoTotal = costoUnit + costoFijoUnit;
   const margenCliente = parseFloat(document.getElementById('cp-margen-cliente')?.value) || 60;
   const margenDistrib = parseFloat(document.getElementById('cp-margen-distrib')?.value) || 30;
-  const precioClienteUnit = costoTotal * (1 + margenCliente / 100);
-  const precioDistribUnit = costoTotal * (1 + margenDistrib / 100);
-  const tbody = document.getElementById('precios-venta-tbody');
+  const margenRepo    = parseFloat(document.getElementById('cp-margen-repo')?.value) || 1.7;
+  const iva           = parseFloat(document.getElementById('cp-iva')?.value) || 0;
+
+  const tbody    = document.getElementById('precios-venta-tbody');
+  const simTbody = document.getElementById('simulador-tbody');
   if (!tbody) return;
-  // Generate rows for all variedades
+
   const variedades = Object.keys(APP.formulas);
-  let rows = '';
-  variedades.forEach(variedad => {
+  if (variedades.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; opacity:0.4; padding:20px;">Cargá una fórmula para ver precios</td></tr>';
+    return;
+  }
+
+  // Cantidades para el simulador (1, 10, 20, 40 como el Excel)
+  const simCantidades = [1, 10, 20, 40];
+
+  let preciosRows = '';
+  let simRows = '';
+
+  // Guardar para uso en pedidos
+  let firstPreciosCli = 0, firstPreciosDist = 0;
+
+  variedades.forEach((variedad, vi) => {
     const { total: totalVar } = getCostoIngredientes(variedad, unidades);
-    const costoUnitVar = unidades > 0 ? totalVar / unidades : 0;
-    const costoTotalVar = costoUnitVar + costoFijoUnit;
-    const precCliVar = costoTotalVar * (1 + margenCliente / 100);
-    const precDistVar = costoTotalVar * (1 + margenDistrib / 100);
-    rows += `
-      <tr><td colspan="4" style="background:var(--oat); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; padding:6px 12px; opacity:0.6;">${variedad}</td></tr>
-      <tr style="background:rgba(200,146,42,0.04);">
-        <td>🍫 Individual</td>
-        <td>$${formatMoney(costoTotalVar)}</td>
-        <td style="color:var(--honey-dark); font-weight:700;">$${formatMoney(precCliVar)}</td>
-        <td style="color:var(--sage); font-weight:700;">$${formatMoney(precDistVar)}</td>
+    const costoUnitVar  = unidades > 0 ? totalVar / unidades : 0;
+    const costoConFijo  = costoUnitVar + costoFijoUnit;
+    const repoMonto     = costoConFijo * margenRepo / 100;
+    const inversion     = costoConFijo + repoMonto;
+    const gananciaUnit  = inversion * margenCliente / 100;
+    const precioCliUnit = (inversion + gananciaUnit) * (1 + iva / 100);
+    const precioDistUnit = (inversion * (1 + margenDistrib / 100)) * (1 + iva / 100);
+
+    if (vi === 0) { firstPreciosCli = precioCliUnit; firstPreciosDist = precioDistUnit; }
+
+    const rowBg = vi % 2 === 0 ? 'rgba(200,146,42,0.04)' : 'rgba(122,140,110,0.04)';
+
+    preciosRows += `
+      <tr style="background:var(--chocolate); color:white;">
+        <td colspan="8" style="padding:5px 12px; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; opacity:0.85;">${variedad}</td>
       </tr>
-      <tr style="background:rgba(122,140,110,0.04);">
-        <td>📦 Caja x12</td>
-        <td>$${formatMoney(costoTotalVar * 12)}</td>
-        <td style="color:var(--honey-dark); font-weight:700;">$${formatMoney(precCliVar * 12)}</td>
-        <td style="color:var(--sage); font-weight:700;">$${formatMoney(precDistVar * 12)}</td>
+      <tr style="background:${rowBg};">
+        <td style="padding:8px 12px;">🍫 Individual</td>
+        <td style="padding:8px 12px; text-align:right; font-family:'DM Mono',monospace;">$${formatMoney(costoConFijo)}</td>
+        <td style="padding:8px 12px; text-align:right; font-family:'DM Mono',monospace; opacity:0.7;">$${formatMoney(repoMonto)}</td>
+        <td style="padding:8px 12px; text-align:right; font-family:'DM Mono',monospace; opacity:0.7;">$${formatMoney(inversion)}</td>
+        <td style="padding:8px 12px; text-align:right; font-family:'DM Mono',monospace; color:var(--sage);">$${formatMoney(gananciaUnit)}</td>
+        <td style="padding:8px 12px; text-align:right; font-family:'DM Mono',monospace; font-weight:700; color:var(--honey-dark); background:rgba(200,146,42,0.08);">
+          <input type="number" value="${precioCliUnit.toFixed(2)}" min="0" step="0.01"
+            onchange="overridePrecio('${variedad}','individual','cliente',this.value)"
+            style="width:80px; text-align:right; border:none; background:transparent; font-family:'DM Mono',monospace; font-weight:700; color:var(--honey-dark); font-size:12.5px;">
+        </td>
+        <td style="padding:8px 12px; text-align:right; font-family:'DM Mono',monospace; font-weight:700; color:var(--sage); background:rgba(122,140,110,0.08);">$${formatMoney(precioCliUnit * 12)}</td>
+        <td style="padding:8px 12px; text-align:right; font-family:'DM Mono',monospace; color:var(--bark); opacity:0.7;">$${formatMoney(precioDistUnit)}</td>
       </tr>`;
+
+    // Simulador por volumen
+    simCantidades.forEach(cant => {
+      const invTotal   = inversion * cant;
+      const ganTotal   = gananciaUnit * cant;
+      const precFinal  = precioCliUnit;
+      const totalCaja  = precioCliUnit * cant;
+      const ganCaja    = gananciaUnit * cant;
+      const pctGan     = inversion > 0 ? ((precioCliUnit - inversion) / inversion * 100).toFixed(1) + '%' : '—';
+      simRows += `
+        <tr style="background:${cant === 1 ? 'rgba(200,146,42,0.06)' : 'transparent'}; border-bottom:1px solid var(--oat);">
+          <td style="padding:6px 12px; font-size:12px;">${cant === 1 ? '<strong>' + variedad + '</strong>' : ''}</td>
+          <td style="padding:6px 12px; text-align:right; font-weight:700;">${cant}</td>
+          <td style="padding:6px 12px; text-align:right; font-family:'DM Mono',monospace;">$${formatMoney(invTotal)}</td>
+          <td style="padding:6px 12px; text-align:right; font-family:'DM Mono',monospace; color:var(--sage);">$${formatMoney(ganTotal)}</td>
+          <td style="padding:6px 12px; text-align:right; font-family:'DM Mono',monospace; font-weight:700; color:var(--honey-dark);">$${formatMoney(precFinal)}</td>
+          <td style="padding:6px 12px; text-align:right; font-family:'DM Mono',monospace;">$${formatMoney(totalCaja)}</td>
+          <td style="padding:6px 12px; text-align:right; font-family:'DM Mono',monospace; color:var(--sage);">$${formatMoney(ganCaja)}</td>
+        </tr>`;
+    });
   });
-  tbody.innerHTML = rows || '<tr><td colspan="4" style="opacity:0.4; padding:20px; text-align:center;">Cargá fórmulas para ver precios</td></tr>';
-  // Save to APP for use in pedidos
+
+  tbody.innerHTML = preciosRows;
+  if (simTbody) simTbody.innerHTML = simRows;
+
+  // Save for use in pedidos/facturas
+  const firstVar = variedades[0];
+  const { total: t0 } = getCostoIngredientes(firstVar, unidades);
+  const c0 = unidades > 0 ? t0 / unidades + costoFijoUnit : 0;
+  const r0 = c0 * margenRepo / 100;
+  const inv0 = c0 + r0;
   APP.preciosGuardados = {
     margenCliente, margenDistrib,
-    costoUnit: costoTotal,
-    precioClienteUnit, precioDistribUnit,
-    precioCajaCliente: precioClienteUnit * 12,
-    precioCajaDistrib: precioDistribUnit * 12,
-    variedad
+    costoUnit: c0,
+    precioClienteUnit: firstPreciosCli,
+    precioDistribUnit: firstPreciosDist,
+    precioCajaCliente: firstPreciosCli * 12,
+    precioCajaDistrib: firstPreciosDist * 12,
+    variedad: firstVar
   };
 }
+
+function overridePrecio(variedad, formato, tipo, valor) {
+  // Permite al usuario sobreescribir el precio final manualmente
+  if (!APP.preciosOverride) APP.preciosOverride = {};
+  APP.preciosOverride[variedad + '_' + formato + '_' + tipo] = parseFloat(valor) || 0;
+}
+
 
 function guardarPrecios() {
   saveLocal();
@@ -5419,6 +5581,45 @@ function renderDashboardAlertas() {
   }
 }
 
+
+
+// ═══════════════════════════════════════════════════
+// CONVERSIÓN DE UNIDADES
+// ═══════════════════════════════════════════════════
+function convertUnit(qty, unitFrom, unitTo) {
+  const norm = u => (u || '').toLowerCase().trim().replace('gramos','g').replace('litro','l');
+  unitFrom = norm(unitFrom); unitTo = norm(unitTo);
+  if (unitFrom === unitTo) return { qty, possible: true };
+  const masa    = { kg:1, g:0.001, gr:0.001, mg:0.000001 };
+  const volumen = { litros:1, l:1, ml:0.001, cc:0.001 };
+  if (masa[unitFrom] && masa[unitTo])       return { qty: qty * masa[unitFrom] / masa[unitTo], possible:true };
+  if (volumen[unitFrom] && volumen[unitTo]) return { qty: qty * volumen[unitFrom] / volumen[unitTo], possible:true };
+  return { qty, possible:false };
+}
+
+function updateFormulaConversion() {
+  const ingNombre = document.getElementById('fi-ing')?.value;
+  const qty       = parseFloat(document.getElementById('fi-qty')?.value) || 0;
+  const unitInput = document.getElementById('fi-unit-input')?.value || 'kg';
+  const infoDiv   = document.getElementById('fi-conversion-info');
+  const infoText  = document.getElementById('fi-conversion-text');
+  if (!infoDiv || !infoText) return;
+  const stockIng  = APP.stock.find(s => s.nombre === ingNombre);
+  const unitStock = stockIng ? (stockIng.unidad || 'kg') : 'kg';
+  document.getElementById('fi-unit-display').value = unitStock;
+  if (!qty || !ingNombre || unitInput === unitStock) { infoDiv.style.display='none'; return; }
+  if (unitInput === 'unidades' || unitInput === 'paquetes') { infoDiv.style.display='none'; return; }
+  const { qty:qtyConv, possible } = convertUnit(qty, unitInput, unitStock);
+  infoDiv.style.display = '';
+  if (possible) {
+    const rounded = parseFloat(qtyConv.toFixed(8));
+    infoText.innerHTML = `📐 <strong>${qty} ${unitInput}</strong> = <strong>${rounded} ${unitStock}</strong> — se descuenta del stock en ${unitStock}`;
+    infoText.style.color = 'var(--bark)';
+  } else {
+    infoText.innerHTML = `⚠️ No se puede convertir <strong>${unitInput}</strong> → <strong>${unitStock}</strong>. Se guardará en ${unitInput}.`;
+    infoText.style.color = 'var(--terracotta)';
+  }
+}
 
 // ═══════════════════════════════════════════════════
 // INIT
