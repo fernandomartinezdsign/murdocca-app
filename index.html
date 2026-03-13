@@ -2605,7 +2605,7 @@ function attemptLogin(email, name, picture) {
   enterApp();
 }
 
-function enterApp() {
+async function enterApp() {
   document.getElementById('login-screen').classList.add('hidden');
   document.getElementById('app-sidebar').style.display = '';
   document.querySelector('.main').style.display = '';
@@ -2625,7 +2625,45 @@ function enterApp() {
 
   // Aplicar restricciones de rol
   applyRoleRestrictions();
+
+  // ── PULL AUTOMÁTICO AL ENTRAR ──
+  // Siempre bajamos datos frescos de Sheets al iniciar sesión
+  if (APP.config.scriptUrl) {
+    setSyncStatus('sync', 'Cargando datos...');
+    showToast('🔄 Sincronizando con la nube...');
+    try {
+      const res = await callScript('pull');
+      if (res && res.ok && res.data) {
+        const remote = res.data;
+        // Sheets es la fuente de verdad — reemplazar datos locales con los remotos
+        // Solo conservar items locales creados offline (no presentes en remote)
+        APP.stock           = mergeById(APP.stock || [], remote.stock || [], 'nombre');
+        APP.clientes        = mergeById(APP.clientes || [], remote.clientes || [], 'nombre');
+        APP.pedidos         = mergeById(APP.pedidos || [], remote.pedidos || [], 'id');
+        APP.facturas        = mergeById(APP.facturas || [], remote.facturas || [], 'id');
+        APP.caja            = mergeCaja(APP.caja || [], remote.caja || []);
+        APP.formulas        = mergeFormulas(APP.formulas || {}, remote.formulas || {});
+        APP.costosFijos     = mergeById(APP.costosFijos || [], remote.costosFijos || [], 'desc');
+        APP.descuentos      = mergeById(APP.descuentos || [], remote.descuentos || [], 'nombre');
+        APP.stockBarritas   = Object.assign({}, remote.stockBarritas || {}, APP.stockBarritas || {});
+        APP.produccionHistorial = mergeById(APP.produccionHistorial || [], remote.produccionHistorial || [], 'id');
+        APP.costoHistorial  = mergeById(APP.costoHistorial || [], remote.costoHistorial || [], 'id');
+        APP.precioHistorial = [...(remote.precioHistorial || [])];
+        if (remote.nextPedidoId  > (APP.nextPedidoId  || 1)) APP.nextPedidoId  = remote.nextPedidoId;
+        if (remote.nextFacturaId > (APP.nextFacturaId || 1)) APP.nextFacturaId = remote.nextFacturaId;
+        saveLocal();
+        setSyncStatus('ok', 'Sincronizado ✓');
+        showToast('✅ Datos actualizados');
+      } else {
+        setSyncStatus('ok', 'Sin conexión — datos locales');
+      }
+    } catch(e) {
+      setSyncStatus('ok', 'Sin conexión — datos locales');
+    }
+  }
+
   renderDashboard();
+  renderDashboardAlertas();
 }
 
 function applyRoleRestrictions() {
@@ -2804,7 +2842,7 @@ async function callScript(action, payload = {}) {
 }
 
 // PUSH: subir todos los datos locales a Sheets
-async function pushToSheets() {
+async async function pushToSheets() {
   if (!APP.config.scriptUrl) return false;
   const payload = {
     stock: APP.stock,
@@ -2815,6 +2853,13 @@ async function pushToSheets() {
     formulas: APP.formulas,
     precios: APP.precios,
     authorizedUsers: APP.authorizedUsers,
+    costosFijos: APP.costosFijos || [],
+    descuentos: APP.descuentos || [],
+    stockBarritas: APP.stockBarritas || {},
+    produccionHistorial: APP.produccionHistorial || [],
+    costoHistorial: APP.costoHistorial || [],
+    precioHistorial: APP.precioHistorial || [],
+    preciosGuardados: APP.preciosGuardados || {},
     config: {
       empresa: APP.config.empresa,
       cuit: APP.config.cuit,
@@ -2827,8 +2872,12 @@ async function pushToSheets() {
     nextPedidoId: APP.nextPedidoId,
     nextFacturaId: APP.nextFacturaId
   };
-  const res = await callScript('push', payload);
-  return res && res.ok;
+  try {
+    const res = await callScript('push', payload);
+    return res && res.ok;
+  } catch(e) {
+    return false;
+  }
 }
 
 // PULL: bajar todos los datos desde Sheets
@@ -2859,7 +2908,7 @@ async function pullFromSheets() {
   return true;
 }
 
-async function syncData() {
+async async function syncData() {
   if (!APP.config.scriptUrl) {
     saveLocal();
     setSyncStatus('ok', 'Guardado local ✓');
@@ -2867,62 +2916,41 @@ async function syncData() {
     return;
   }
   setSyncStatus('sync', 'Sincronizando...');
-  saveLocal();
 
-  // 1. Bajar datos remotos
-  const res = await callScript('pull');
-
-  if (!res || !res.ok) {
-    // Sin datos remotos — solo subir lo local
-    const pushed = await pushToSheets();
-    if (pushed) {
-      setSyncStatus('ok', 'Sincronizado ✓');
-      showToast('✅ Datos guardados en la nube');
-      setTimeout(() => setSyncStatus('ok', 'Conectado a Sheets'), 2000);
-    } else {
-      setSyncStatus('error', 'Error al guardar');
-      showToast('❌ No se pudo conectar con Google Sheets');
-    }
+  // 1. Subir estado actual a Sheets (fuente de verdad)
+  const pushed = await pushToSheets();
+  if (!pushed) {
+    setSyncStatus('error', 'Error al guardar');
+    showToast('❌ No se pudo conectar con Google Sheets');
     return;
   }
 
-  const remote = res.data || {};
+  // 2. Confirmar con un pull para asegurar consistencia
+  try {
+    const res = await callScript('pull');
+    if (res && res.ok && res.data) {
+      const remote = res.data;
+      APP.stock           = mergeById(APP.stock || [], remote.stock || [], 'nombre');
+      APP.clientes        = mergeById(APP.clientes || [], remote.clientes || [], 'nombre');
+      APP.pedidos         = mergeById(APP.pedidos || [], remote.pedidos || [], 'id');
+      APP.facturas        = mergeById(APP.facturas || [], remote.facturas || [], 'id');
+      APP.caja            = mergeCaja(APP.caja || [], remote.caja || []);
+      APP.formulas        = mergeFormulas(APP.formulas || {}, remote.formulas || {});
+      APP.costosFijos     = mergeById(APP.costosFijos || [], remote.costosFijos || [], 'desc');
+      APP.descuentos      = mergeById(APP.descuentos || [], remote.descuentos || [], 'nombre');
+      if (remote.nextPedidoId  > (APP.nextPedidoId  || 1)) APP.nextPedidoId  = remote.nextPedidoId;
+      if (remote.nextFacturaId > (APP.nextFacturaId || 1)) APP.nextFacturaId = remote.nextFacturaId;
+      saveLocal();
+    }
+  } catch(e) {}
 
-  // 2. Merge: combinar datos remotos con locales (gana el que tiene más datos)
-  const merged = mergeData(APP, remote);
+  setSyncStatus('ok', 'Sincronizado ✓');
+  showToast('✅ Datos guardados en la nube');
+  setTimeout(() => setSyncStatus('ok', 'Conectado a Sheets'), 2000);
 
-  // 3. Aplicar merged a APP
-  APP.stock = merged.stock;
-  APP.clientes = merged.clientes;
-  APP.pedidos = merged.pedidos;
-  APP.facturas = merged.facturas;
-  APP.caja = merged.caja;
-  APP.formulas = merged.formulas;
-  APP.precios = merged.precios;
-  APP.authorizedUsers = merged.authorizedUsers;
-  APP.nextPedidoId = merged.nextPedidoId;
-  APP.nextFacturaId = merged.nextFacturaId;
-  if (remote.config) {
-    APP.config.empresa = remote.config.empresa || APP.config.empresa;
-    APP.config.cuit = remote.config.cuit || APP.config.cuit;
-    APP.config.tel = remote.config.tel || APP.config.tel;
-    APP.config.email = remote.config.email || APP.config.email;
-    APP.config.dir = remote.config.dir || APP.config.dir;
-  }
-  saveLocal();
-
-  // 4. Subir el merge completo
-  const pushed = await pushToSheets();
-  if (pushed) {
-    setSyncStatus('ok', 'Sincronizado ✓');
-    showToast('✅ Datos sincronizados correctamente');
-    setTimeout(() => setSyncStatus('ok', 'Conectado a Sheets'), 2000);
-    const active = document.querySelector('.section.active');
-    if (active) onSectionLoad(active.id.replace('sec-', ''));
-  } else {
-    setSyncStatus('error', 'Error al guardar');
-    showToast('⚠️ Datos combinados pero no se pudieron subir');
-  }
+  // Refrescar sección activa
+  const active = document.querySelector('.section.active');
+  if (active) onSectionLoad(active.id.replace('sec-', ''));
 }
 
 // MERGE: combina datos locales y remotos sin perder nada
@@ -2943,21 +2971,22 @@ function mergeData(local, remote) {
 
 // Merge por campo único — si existe en ambos, gana el local (más reciente)
 function mergeById(localArr, remoteArr, key) {
-  const map = {};
-  // Primero remote (base)
-  remoteArr.forEach(item => { map[item[key]] = item; });
-  // Luego local sobreescribe (tiene prioridad)
-  localArr.forEach(item => { map[item[key]] = item; });
-  return Object.values(map);
+  // Sheets es la fuente de verdad — remote siempre gana
+  // Solo agregamos items locales que no existen en remote (creados offline)
+  const remoteKeys = new Set(remoteArr.map(item => String(item[key])));
+  const localOnly  = localArr.filter(item => !remoteKeys.has(String(item[key])));
+  return [...remoteArr, ...localOnly];
 }
 
 // Merge de movimientos de caja (sin duplicados por desc+fecha+monto)
 function mergeCaja(local, remote) {
-  const key = m => `${m.fecha}|${m.desc}|${m.monto}|${m.tipo}`;
-  const map = {};
-  remote.forEach(m => { map[key(m)] = m; });
-  local.forEach(m => { map[key(m)] = m; });
-  return Object.values(map).sort((a,b) => (a.fecha||'') > (b.fecha||'') ? 1 : -1);
+  // Sheets es la fuente de verdad para caja también
+  // Identificamos por cajaId si existe, sino por clave compuesta
+  const key = m => m.cajaId ? String(m.cajaId) : `${m.fecha}|${m.desc}|${m.monto}|${m.tipo}`;
+  const remoteKeys = new Set(remote.map(key));
+  // Solo agregamos movimientos locales que NO están en remote (creados offline sin sync)
+  const localOnly = local.filter(m => !remoteKeys.has(key(m)));
+  return [...remote, ...localOnly].sort((a,b) => (a.fecha||'') > (b.fecha||'') ? 1 : -1);
 }
 
 // Merge de fórmulas (combina variedades)
@@ -3736,7 +3765,7 @@ function savePedido() {
   };
   APP.pedidos.push(pedido);
   if (pagado && total > 0) {
-    APP.caja.push({ tipo:'ingreso', desc:`Pago pedido #${pedido.id} — ${cliente}`, monto:total, categoria:'ventas', fecha:today(), pedidoId:pedido.id });
+    APP.caja.push({ cajaId: Date.now() + Math.random(), tipo:'ingreso', desc:`Pago pedido #${pedido.id} — ${cliente}`, monto:total, categoria:'ventas', fecha:today(), pedidoId:pedido.id });
     showToast(`💰 $${formatMoney(total)} registrado en Caja ✓`);
   }
   saveLocal();
@@ -4336,7 +4365,7 @@ function saveCaja() {
   const monto = parseFloat(document.getElementById('caja-monto').value) || 0;
   if (!desc) return alert('Ingresá una descripción');
   if (!monto) return alert('Ingresá un monto');
-  APP.caja.push({
+  APP.caja.push({ cajaId: Date.now() + Math.random(),
     tipo: document.getElementById('caja-tipo').value,
     desc,
     monto,
@@ -4963,7 +4992,7 @@ function togglePagoPedido(id) {
     // Registrar automáticamente en caja
     const yaEnCaja = APP.caja.find(m => m.pedidoId === id);
     if (!yaEnCaja) {
-      APP.caja.push({
+      APP.caja.push({ cajaId: Date.now() + Math.random(),
         tipo: 'ingreso',
         desc: `Pago pedido #${id} — ${p.cliente}`,
         monto: parseFloat(p.total) || 0,
@@ -5247,7 +5276,7 @@ function marcarPagado(id) {
   if (!p) return;
   p.pagado = true;
   if (!APP.caja.find(m => m.pedidoId === id)) {
-    APP.caja.push({ tipo:'ingreso', desc:'Cobro pedido #'+id+' — '+p.cliente, monto:parseFloat(p.total)||0, categoria:'ventas', fecha:today(), pedidoId:id });
+    APP.caja.push({ cajaId: Date.now() + Math.random(), tipo:'ingreso', desc:'Cobro pedido #'+id+' — '+p.cliente, monto:parseFloat(p.total)||0, categoria:'ventas', fecha:today(), pedidoId:id });
   }
   saveLocal();
   renderDeudas();
