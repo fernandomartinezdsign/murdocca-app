@@ -2901,7 +2901,7 @@ async function callScript(action, payload = {}) {
 }
 
 // PUSH: subir todos los datos locales a Sheets
-async async function pushToSheets() {
+async function pushToSheets() {
   if (!APP.config.scriptUrl) return false;
   const payload = {
     stock: APP.stock,
@@ -2967,7 +2967,7 @@ async function pullFromSheets() {
   return true;
 }
 
-async async function syncData() {
+async function syncData() {
   if (!APP.config.scriptUrl) {
     saveLocal();
     setSyncStatus('ok', 'Guardado local ✓');
