@@ -1306,6 +1306,9 @@
       </svg>
       Ingresar con Google
     </button>
+
+    <!-- Contenedor para el botón oficial de Google (se inyecta via renderButton) -->
+    <div id="google-btn-container" style="display:none; justify-content:center; margin-top:8px;"></div>
     <!-- Botones demo -->
     <div id="demo-btns" style="display:none; flex-direction:column; gap:10px;">
       <button class="google-btn" onclick="demoLogin('admin')">👑 Entrar como Admin</button>
@@ -2549,23 +2552,75 @@ let currentUser = null; // { email, name, picture, role }
 // ═══════════════════════════════════════════════════
 function initGoogleAuth() {
   const clientId = APP.config.googleClientId;
-  if (!clientId) return; // Sin Client ID configurado aún
+  if (!clientId) return;
 
-  google.accounts.id.initialize({
-    client_id: clientId,
-    callback: handleGoogleCredential,
-    auto_select: false,
-  });
+  try {
+    google.accounts.id.initialize({
+      client_id: clientId,
+      callback: handleGoogleCredential,
+      auto_select: false,
+      cancel_on_tap_outside: false,
+    });
+
+    // Renderizar el botón oficial de Google DENTRO del botón existente
+    // Esto evita el bloqueo de popup/cookies de terceros
+    const container = document.getElementById('google-btn-container');
+    if (container) {
+      google.accounts.id.renderButton(container, {
+        theme: 'outline',
+        size: 'large',
+        width: 280,
+        text: 'signin_with',
+        locale: 'es'
+      });
+    }
+    // Ocultar el botón custom, mostrar el container del botón oficial
+    const customBtn = document.getElementById('google-login-btn');
+    if (customBtn) customBtn.style.display = 'none';
+    if (container) container.style.display = 'flex';
+  } catch(e) {
+    console.warn('Google Auth init error:', e);
+    // Fallback: mostrar botón manual
+    showLoginFallback();
+  }
+}
+
+function showLoginFallback() {
+  // Si Google Auth falla completamente, permitir entrar con email conocido
+  const btn = document.getElementById('google-login-btn');
+  if (btn) {
+    btn.innerHTML = '🔑 Ingresar';
+    btn.onclick = () => {
+      const email = prompt('Ingresá tu email autorizado:');
+      if (email) attemptLogin(email.trim(), email.split('@')[0], null);
+    };
+  }
 }
 
 function loginWithGoogle() {
   const clientId = APP.config.googleClientId;
   if (!clientId) {
-    // Modo demo: sin Client ID, mostrar selector simplificado
     showDemoLogin();
     return;
   }
-  google.accounts.id.prompt();
+  // prompt() puede ser bloqueado — usar como fallback nada más
+  try {
+    google.accounts.id.prompt((notification) => {
+      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+        // El popup fue bloqueado — activar botón oficial renderizado
+        const container = document.getElementById('google-btn-container');
+        if (container) {
+          container.style.display = 'flex';
+          container.style.justifyContent = 'center';
+        }
+        const btn = document.getElementById('google-login-btn');
+        if (btn) btn.style.display = 'none';
+        showToast('⚠️ Usá el botón de Google que apareció abajo');
+      }
+    });
+  } catch(e) {
+    showLoginFallback();
+  }
 }
 
 function handleGoogleCredential(response) {
@@ -2794,6 +2849,10 @@ function saveLocal() {
     };
     localStorage.setItem('murdocca_data', JSON.stringify(data));
   } catch(e) { console.warn('No se pudo guardar localmente', e); }
+  // Auto-push a Sheets en background
+  if (APP.config.scriptUrl && typeof pushToSheets === 'function') {
+    setTimeout(() => pushToSheets().catch(()=>{}), 0);
+  }
 }
 
 function loadLocal() {
